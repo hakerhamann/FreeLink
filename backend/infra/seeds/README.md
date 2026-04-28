@@ -1,0 +1,1 @@
+-- Seed data placeholders for local and staging environments.

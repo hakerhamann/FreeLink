@@ -1,0 +1,15 @@
+plugins {
+    id("freelink.android.library")
+}
+
+dependencies {
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.material3)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.navigation.compose)
+    implementation(project(":android:core:ui"))
+    testImplementation(libs.junit4)
+}
+
