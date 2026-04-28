@@ -6,9 +6,9 @@
 
 ## Sprint board
 
-1. Sprint 0: foundation and scaffolding (in progress)
-2. Sprint 1: auth and devices
-3. Sprint 2: chat list and search
+1. Sprint 0: foundation and scaffolding (completed)
+2. Sprint 1: auth, devices, profile, and privacy baseline (completed)
+3. Sprint 2: chat list and search (in progress)
 4. Sprint 3: direct chat core
 5. Sprint 4: groups and profile
 6. Sprint 5: media pipeline

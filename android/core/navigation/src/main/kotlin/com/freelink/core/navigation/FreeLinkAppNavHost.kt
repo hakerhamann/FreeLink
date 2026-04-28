@@ -15,6 +15,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.freelink.core.ui.FreeLinkPlaceholderScreen
+import com.freelink.feature.auth.ui.AuthRoute
+import com.freelink.feature.chatlist.ui.ChatListRoute
+import com.freelink.feature.devices.ui.DeviceSessionsRoute
+import com.freelink.feature.profile.ui.ProfileRoute
+import com.freelink.feature.settings.ui.SettingsRoute
 
 private data class RootDestination(
     val route: String,
@@ -29,25 +34,96 @@ private val rootDestinations = listOf(
     RootDestination(route = "profile", label = "Profile")
 )
 
+private const val authRoute = "auth"
+private const val settingsRoute = "settings"
+private const val devicesRoute = "devices"
+
 @Composable
 fun FreeLinkAppNavHost() {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showBottomBar = rootDestinations.any { it.route == currentRoute }
 
     Scaffold(
         bottomBar = {
-            FreeLinkBottomBar(navController = navController)
+            if (showBottomBar) {
+                FreeLinkBottomBar(navController = navController)
+            }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "chats",
+            startDestination = authRoute,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(route = "chats") { FreeLinkPlaceholderScreen(title = "Chats") }
+            composable(route = authRoute) {
+                AuthRoute(
+                    onAuthorized = {
+                        navController.navigate("chats") {
+                            popUpTo(authRoute) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(route = "chats") { ChatListRoute() }
             composable(route = "people") { FreeLinkPlaceholderScreen(title = "People") }
             composable(route = "spaces") { FreeLinkPlaceholderScreen(title = "Spaces") }
             composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
-            composable(route = "profile") { FreeLinkPlaceholderScreen(title = "Profile") }
+            composable(route = "profile") {
+                ProfileRoute(
+                    onOpenPrivacySettings = {
+                        navController.navigate(settingsRoute) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onOpenDevices = {
+                        navController.navigate(devicesRoute) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onLoggedOut = {
+                        navController.navigate(authRoute) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(route = settingsRoute) {
+                SettingsRoute(
+                    onOpenDevices = {
+                        navController.navigate(devicesRoute) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onLoggedOut = {
+                        navController.navigate(authRoute) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(route = devicesRoute) {
+                DeviceSessionsRoute(
+                    onLoggedOut = {
+                        navController.navigate(authRoute) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
     }
 }

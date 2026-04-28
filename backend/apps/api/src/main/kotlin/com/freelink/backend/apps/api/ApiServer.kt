@@ -1,5 +1,11 @@
 package com.freelink.backend.apps.api
 
+import com.freelink.backend.apps.api.routes.installAuthRoutes
+import com.freelink.backend.apps.api.routes.installChatRoutes
+import com.freelink.backend.apps.api.routes.installPrivacyRoutes
+import com.freelink.backend.libs.auth.service.InMemoryAuthService
+import com.freelink.backend.libs.chats.service.InMemoryChatsService
+import com.freelink.backend.libs.privacy.service.InMemoryPrivacySettingsService
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -17,6 +23,10 @@ fun main() {
 }
 
 fun Application.freeLinkApiModule() {
+    val authService = InMemoryAuthService()
+    val chatsService = InMemoryChatsService()
+    val privacySettingsService = InMemoryPrivacySettingsService()
+
     install(ContentNegotiation) {
         json()
     }
@@ -28,5 +38,8 @@ fun Application.freeLinkApiModule() {
         get("/api/v1/ping") {
             call.respondText("freelink-api")
         }
+        installAuthRoutes(authService)
+        installChatRoutes(authService, chatsService)
+        installPrivacyRoutes(authService, privacySettingsService)
     }
 }

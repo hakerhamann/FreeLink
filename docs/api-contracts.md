@@ -41,3 +41,14 @@
   "sentAt": "2026-04-28T12:34:56Z"
 }
 ```
+
+## Sprint 1 notes
+
+- Current scaffold uses in-memory auth/session storage for local development.
+- `GET /devices` and `DELETE /devices/{deviceId}` use `Authorization: Bearer <accessToken>`.
+- `GET /privacy/settings` and `PUT /privacy/settings` use `Authorization: Bearer <accessToken>`.
+- `GET /chats` uses `Authorization: Bearer <accessToken>` and supports optional `q` and `unreadOnly` query params.
+- Privacy defaults are server-defined (`hiddenMode=false`, `biometricLock=false`, `linkPreview=true`, `whoCanMessageMe=trusted_contacts`).
+- On Android, protected device requests now retry once after `401` via `/auth/refresh`.
+- On Android, privacy and device protected requests retry once after `401` via `/auth/refresh`.
+- On Android, chat list now syncs from API to Room (`core:database`) and applies search/unread filtering from local cache.
