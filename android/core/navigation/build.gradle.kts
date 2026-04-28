@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":android:core:ui"))
     implementation(project(":android:feature:auth"))
     implementation(project(":android:feature:chatlist"))
+    implementation(project(":android:feature:people"))
     implementation(project(":android:feature:devices"))
     implementation(project(":android:feature:profile"))
     implementation(project(":android:feature:settings"))

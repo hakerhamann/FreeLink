@@ -59,6 +59,7 @@ include(
     ":backend:libs:db",
     ":backend:libs:auth",
     ":backend:libs:chats",
+    ":backend:libs:people",
     ":backend:libs:crypto",
     ":backend:libs:messaging",
     ":backend:libs:groups",
