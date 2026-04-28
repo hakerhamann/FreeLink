@@ -41,3 +41,8 @@
   "sentAt": "2026-04-28T12:34:56Z"
 }
 ```
+
+## Sprint 1 notes
+
+- Current scaffold uses in-memory auth/session storage for local development.
+- `GET /devices` and `DELETE /devices/{deviceId}` currently require `X-Refresh-Token` header.

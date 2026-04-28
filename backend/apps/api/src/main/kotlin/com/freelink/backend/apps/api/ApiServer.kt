@@ -1,5 +1,7 @@
 package com.freelink.backend.apps.api
 
+import com.freelink.backend.apps.api.routes.installAuthRoutes
+import com.freelink.backend.libs.auth.service.InMemoryAuthService
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -17,6 +19,8 @@ fun main() {
 }
 
 fun Application.freeLinkApiModule() {
+    val authService = InMemoryAuthService()
+
     install(ContentNegotiation) {
         json()
     }
@@ -28,5 +32,6 @@ fun Application.freeLinkApiModule() {
         get("/api/v1/ping") {
             call.respondText("freelink-api")
         }
+        installAuthRoutes(authService)
     }
 }

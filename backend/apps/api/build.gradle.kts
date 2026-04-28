@@ -1,6 +1,7 @@
 plugins {
     application
     id("freelink.kotlin.jvm")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 application {

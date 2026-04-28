@@ -1,5 +1,6 @@
 plugins {
     id("freelink.android.library")
+    id("freelink.android.compose")
 }
 
 dependencies {
@@ -10,6 +11,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(project(":android:core:ui"))
+    implementation(project(":android:feature:auth"))
     testImplementation(libs.junit4)
 }
 
