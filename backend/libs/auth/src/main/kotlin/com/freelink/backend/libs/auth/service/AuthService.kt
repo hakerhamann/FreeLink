@@ -8,7 +8,8 @@ interface AuthService {
     fun login(command: LoginCommand): AuthTokens?
     fun refresh(refreshToken: String): AuthTokens?
     fun logout(refreshToken: String): Boolean
-    fun listDevices(refreshToken: String): List<DeviceSession>
-    fun revokeDevice(refreshToken: String, deviceId: String): Boolean
+    fun listDevicesByAccessToken(accessToken: String): List<DeviceSession>?
+    fun revokeDeviceByAccessToken(accessToken: String, deviceId: String): Boolean
+    fun resolveUserIdByAccessToken(accessToken: String): String?
 }
 

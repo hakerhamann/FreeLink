@@ -15,6 +15,7 @@ class InMemoryAuthService : AuthService {
 
     private val usersByLogin = ConcurrentHashMap<String, UserRecord>()
     private val sessionsByRefresh = ConcurrentHashMap<String, SessionRecord>()
+    private val sessionsByAccess = ConcurrentHashMap<String, SessionRecord>()
     private val failedAttempts = ConcurrentHashMap<String, FailedAttemptRecord>()
 
     override fun register(command: RegisterCommand): AuthTokens? {
@@ -62,19 +63,21 @@ class InMemoryAuthService : AuthService {
     }
 
     override fun refresh(refreshToken: String): AuthTokens? {
-        val session = sessionsByRefresh[refreshToken] ?: return null
-        val userRecord = usersByLogin.values.firstOrNull { it.userId == session.userId } ?: return null
+        val session = sessionsByRefresh.remove(refreshToken) ?: return null
+        sessionsByAccess.remove(session.accessToken)
 
-        sessionsByRefresh.remove(refreshToken)
+        val userRecord = usersByLogin.values.firstOrNull { it.userId == session.userId } ?: return null
         return createSession(userRecord, session.deviceName, existingDeviceId = session.deviceId)
     }
 
     override fun logout(refreshToken: String): Boolean {
-        return sessionsByRefresh.remove(refreshToken) != null
+        val session = sessionsByRefresh.remove(refreshToken) ?: return false
+        sessionsByAccess.remove(session.accessToken)
+        return true
     }
 
-    override fun listDevices(refreshToken: String): List<DeviceSession> {
-        val currentSession = sessionsByRefresh[refreshToken] ?: return emptyList()
+    override fun listDevicesByAccessToken(accessToken: String): List<DeviceSession>? {
+        val currentSession = sessionsByAccess[accessToken] ?: return null
         return sessionsByRefresh.values
             .filter { it.userId == currentSession.userId }
             .sortedByDescending { it.lastSeenAtIso }
@@ -83,18 +86,31 @@ class InMemoryAuthService : AuthService {
                     deviceId = it.deviceId,
                     deviceName = it.deviceName,
                     lastSeenAtIso = it.lastSeenAtIso,
-                    isCurrent = it.refreshToken == refreshToken
+                    isCurrent = it.accessToken == accessToken
                 )
             }
     }
 
-    override fun revokeDevice(refreshToken: String, deviceId: String): Boolean {
-        val currentSession = sessionsByRefresh[refreshToken] ?: return false
-        val removed = sessionsByRefresh.entries.removeIf {
-            it.value.userId == currentSession.userId && it.value.deviceId == deviceId
+    override fun revokeDeviceByAccessToken(accessToken: String, deviceId: String): Boolean {
+        val currentSession = sessionsByAccess[accessToken] ?: return false
+        val toRemove = sessionsByRefresh.values.filter {
+            it.userId == currentSession.userId && it.deviceId == deviceId
         }
 
-        return removed
+        if (toRemove.isEmpty()) {
+            return false
+        }
+
+        toRemove.forEach { session ->
+            sessionsByRefresh.remove(session.refreshToken)
+            sessionsByAccess.remove(session.accessToken)
+        }
+
+        return true
+    }
+
+    override fun resolveUserIdByAccessToken(accessToken: String): String? {
+        return sessionsByAccess[accessToken]?.userId
     }
 
     private fun isCredentialInputValid(login: String, password: String): Boolean {
@@ -113,13 +129,17 @@ class InMemoryAuthService : AuthService {
         val refreshToken = randomToken(bytes = 48)
         val issuedAt = Instant.now().toString()
 
-        sessionsByRefresh[refreshToken] = SessionRecord(
+        val sessionRecord = SessionRecord(
+            accessToken = accessToken,
             refreshToken = refreshToken,
             userId = userRecord.userId,
             deviceId = deviceId,
             deviceName = deviceName.ifBlank { "Android Device" },
             lastSeenAtIso = issuedAt
         )
+
+        sessionsByRefresh[refreshToken] = sessionRecord
+        sessionsByAccess[accessToken] = sessionRecord
 
         return AuthTokens(
             userId = userRecord.userId,
@@ -164,6 +184,7 @@ class InMemoryAuthService : AuthService {
     )
 
     private data class SessionRecord(
+        val accessToken: String,
         val refreshToken: String,
         val userId: String,
         val deviceId: String,
@@ -176,4 +197,3 @@ class InMemoryAuthService : AuthService {
         val blockedUntil: Instant
     )
 }
-

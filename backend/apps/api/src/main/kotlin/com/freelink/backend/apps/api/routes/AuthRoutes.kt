@@ -149,25 +149,30 @@ fun Route.installAuthRoutes(authService: AuthService) {
     }
 
     get("/devices") {
-        val refreshToken = call.request.headers["X-Refresh-Token"]
-        if (refreshToken.isNullOrBlank()) {
-            call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "X-Refresh-Token header is required."))
+        val accessToken = call.request.headers["Authorization"].extractBearerToken()
+        if (accessToken.isNullOrBlank()) {
+            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Authorization bearer token is required."))
             return@get
         }
 
-        val devices = authService.listDevices(refreshToken)
+        val devices = authService.listDevicesByAccessToken(accessToken)
+        if (devices == null) {
+            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Invalid credentials or session state."))
+            return@get
+        }
+
         call.respond(devices.map(::toDeviceSessionDto))
     }
 
     delete("/devices/{deviceId}") {
-        val refreshToken = call.request.headers["X-Refresh-Token"]
+        val accessToken = call.request.headers["Authorization"].extractBearerToken()
         val deviceId = call.parameters["deviceId"]
-        if (refreshToken.isNullOrBlank() || deviceId.isNullOrBlank()) {
+        if (accessToken.isNullOrBlank() || deviceId.isNullOrBlank()) {
             call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "Missing required request data."))
             return@delete
         }
 
-        val revoked = authService.revokeDevice(refreshToken, deviceId)
+        val revoked = authService.revokeDeviceByAccessToken(accessToken, deviceId)
         if (!revoked) {
             call.respond(HttpStatusCode.NotFound, ErrorResponseDto(message = "Device not found."))
             return@delete
@@ -175,6 +180,15 @@ fun Route.installAuthRoutes(authService: AuthService) {
 
         call.respond(HttpStatusCode.NoContent)
     }
+}
+
+private fun String?.extractBearerToken(): String? {
+    if (this == null) {
+        return null
+    }
+
+    val prefix = "Bearer "
+    return if (startsWith(prefix)) substring(prefix.length).trim() else null
 }
 
 private fun toDeviceSessionDto(session: DeviceSession): DeviceSessionDto {
@@ -185,4 +199,3 @@ private fun toDeviceSessionDto(session: DeviceSession): DeviceSessionDto {
         isCurrent = session.isCurrent
     )
 }
-

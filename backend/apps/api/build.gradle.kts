@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":backend:libs:messaging"))
     implementation(project(":backend:libs:groups"))
     implementation(project(":backend:libs:media"))
+    implementation(project(":backend:libs:privacy"))
     implementation(project(":backend:libs:notifications"))
     implementation(project(":backend:libs:observability"))
 

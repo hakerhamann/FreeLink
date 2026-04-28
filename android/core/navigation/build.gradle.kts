@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":android:core:ui"))
     implementation(project(":android:feature:auth"))
     implementation(project(":android:feature:devices"))
+    implementation(project(":android:feature:settings"))
     testImplementation(libs.junit4)
 }
 

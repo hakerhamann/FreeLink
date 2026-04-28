@@ -45,4 +45,8 @@
 ## Sprint 1 notes
 
 - Current scaffold uses in-memory auth/session storage for local development.
-- `GET /devices` and `DELETE /devices/{deviceId}` currently require `X-Refresh-Token` header.
+- `GET /devices` and `DELETE /devices/{deviceId}` use `Authorization: Bearer <accessToken>`.
+- `GET /privacy/settings` and `PUT /privacy/settings` use `Authorization: Bearer <accessToken>`.
+- Privacy defaults are server-defined (`hiddenMode=false`, `biometricLock=false`, `linkPreview=true`, `whoCanMessageMe=trusted_contacts`).
+- On Android, protected device requests now retry once after `401` via `/auth/refresh`.
+- On Android, privacy and device protected requests retry once after `401` via `/auth/refresh`.

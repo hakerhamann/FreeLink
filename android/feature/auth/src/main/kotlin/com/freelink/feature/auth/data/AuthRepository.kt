@@ -66,12 +66,61 @@ class AuthRepository(
     }
 
     suspend fun loadDevices(): AuthRepositoryResult<List<DeviceSession>> {
-        val refreshToken = sessionStore.sessionFlow.first()?.refreshToken
-            ?: return AuthRepositoryResult.Success(emptyList())
+        return withAutoRefresh { session ->
+            apiClient.listDevices(session.accessToken)
+        }
+    }
 
-        return when (val result = apiClient.listDevices(refreshToken)) {
-            is AuthApiResult.Success -> AuthRepositoryResult.Success(result.value)
-            is AuthApiResult.Failure -> AuthRepositoryResult.Failure(result.message)
+    suspend fun revokeDevice(deviceId: String): AuthRepositoryResult<Unit> {
+        return withAutoRefresh { session ->
+            apiClient.revokeDevice(
+                accessToken = session.accessToken,
+                deviceId = deviceId
+            )
+        }
+    }
+
+    suspend fun <T> authorizedRequest(
+        request: suspend (session: AuthSession) -> AuthApiResult<T>
+    ): AuthRepositoryResult<T> {
+        return withAutoRefresh(request)
+    }
+
+    private suspend fun <T> withAutoRefresh(
+        request: suspend (session: AuthSession) -> AuthApiResult<T>
+    ): AuthRepositoryResult<T> {
+        val currentSession = sessionStore.sessionFlow.first()
+            ?: return AuthRepositoryResult.Failure("Сессия не найдена. Выполните вход заново.")
+
+        val firstAttempt = request(currentSession)
+        if (firstAttempt is AuthApiResult.Success) {
+            return AuthRepositoryResult.Success(firstAttempt.value)
+        }
+
+        val firstFailure = firstAttempt as AuthApiResult.Failure
+        if (firstFailure.statusCode != 401) {
+            return AuthRepositoryResult.Failure(firstFailure.message)
+        }
+
+        val refreshedSession = refreshSession(currentSession)
+            ?: return AuthRepositoryResult.Failure("Сессия истекла. Выполните вход заново.")
+
+        return when (val secondAttempt = request(refreshedSession)) {
+            is AuthApiResult.Success -> AuthRepositoryResult.Success(secondAttempt.value)
+            is AuthApiResult.Failure -> AuthRepositoryResult.Failure(secondAttempt.message)
+        }
+    }
+
+    private suspend fun refreshSession(session: AuthSession): AuthSession? {
+        return when (val refreshResult = apiClient.refresh(session.refreshToken)) {
+            is AuthApiResult.Success -> {
+                sessionStore.save(refreshResult.value)
+                refreshResult.value
+            }
+            is AuthApiResult.Failure -> {
+                sessionStore.clear()
+                null
+            }
         }
     }
 }

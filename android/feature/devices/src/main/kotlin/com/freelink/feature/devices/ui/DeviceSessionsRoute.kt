@@ -21,20 +21,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.freelink.core.datastore.auth.AuthSessionStore
-import com.freelink.core.model.domain.auth.DeviceSession
 import com.freelink.core.network.auth.KtorAuthApiClient
+import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.devices.data.DeviceSessionsRepository
+import com.freelink.core.model.domain.auth.DeviceSession
 
 @Composable
 fun DeviceSessionsRoute(
     onLoggedOut: () -> Unit
 ) {
     val context = LocalContext.current.applicationContext
-    val repository = remember {
-        DeviceSessionsRepository(
-            authApiClient = KtorAuthApiClient(),
-            authSessionStore = AuthSessionStore.create(context)
+    val authRepository = remember {
+        AuthRepository(
+            apiClient = KtorAuthApiClient(),
+            sessionStore = AuthSessionStore.create(context)
         )
+    }
+    val repository = remember {
+        DeviceSessionsRepository(authRepository)
     }
 
     val deviceSessionsViewModel: DeviceSessionsViewModel = viewModel(

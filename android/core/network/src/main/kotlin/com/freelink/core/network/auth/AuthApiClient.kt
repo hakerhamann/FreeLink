@@ -13,6 +13,6 @@ interface AuthApiClient {
     suspend fun login(login: String, password: String, deviceName: String): AuthApiResult<AuthSession>
     suspend fun refresh(refreshToken: String): AuthApiResult<AuthSession>
     suspend fun logout(refreshToken: String): AuthApiResult<Unit>
-    suspend fun listDevices(refreshToken: String): AuthApiResult<List<DeviceSession>>
-    suspend fun revokeDevice(refreshToken: String, deviceId: String): AuthApiResult<Unit>
+    suspend fun listDevices(accessToken: String): AuthApiResult<List<DeviceSession>>
+    suspend fun revokeDevice(accessToken: String, deviceId: String): AuthApiResult<Unit>
 }

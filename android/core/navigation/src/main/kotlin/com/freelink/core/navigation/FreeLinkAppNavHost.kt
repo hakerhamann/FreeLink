@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.freelink.core.ui.FreeLinkPlaceholderScreen
 import com.freelink.feature.auth.ui.AuthRoute
 import com.freelink.feature.devices.ui.DeviceSessionsRoute
+import com.freelink.feature.settings.ui.SettingsRoute
 
 private data class RootDestination(
     val route: String,
@@ -32,13 +33,14 @@ private val rootDestinations = listOf(
 )
 
 private const val authRoute = "auth"
+private const val devicesRoute = "devices"
 
 @Composable
 fun FreeLinkAppNavHost() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val showBottomBar = currentRoute != authRoute
+    val showBottomBar = rootDestinations.any { it.route == currentRoute }
 
     Scaffold(
         bottomBar = {
@@ -69,6 +71,23 @@ fun FreeLinkAppNavHost() {
             composable(route = "spaces") { FreeLinkPlaceholderScreen(title = "Spaces") }
             composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
             composable(route = "profile") {
+                SettingsRoute(
+                    onOpenDevices = {
+                        navController.navigate(devicesRoute) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onLoggedOut = {
+                        navController.navigate(authRoute) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(route = devicesRoute) {
                 DeviceSessionsRoute(
                     onLoggedOut = {
                         navController.navigate(authRoute) {

@@ -64,6 +64,7 @@ include(
     ":backend:libs:media",
     ":backend:libs:calls",
     ":backend:libs:updates",
+    ":backend:libs:privacy",
     ":backend:libs:notifications",
     ":backend:libs:observability"
 )

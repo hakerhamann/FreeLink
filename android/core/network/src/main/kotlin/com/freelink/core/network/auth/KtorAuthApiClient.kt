@@ -64,9 +64,9 @@ class KtorAuthApiClient(
         }
     }
 
-    override suspend fun listDevices(refreshToken: String): AuthApiResult<List<DeviceSession>> {
+    override suspend fun listDevices(accessToken: String): AuthApiResult<List<DeviceSession>> {
         val response = client.get("$baseUrl/devices") {
-            header("X-Refresh-Token", refreshToken)
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
 
         if (!response.status.isSuccess()) {
@@ -93,9 +93,9 @@ class KtorAuthApiClient(
         return AuthApiResult.Success(devices)
     }
 
-    override suspend fun revokeDevice(refreshToken: String, deviceId: String): AuthApiResult<Unit> {
+    override suspend fun revokeDevice(accessToken: String, deviceId: String): AuthApiResult<Unit> {
         val response = client.delete("$baseUrl/devices/$deviceId") {
-            header("X-Refresh-Token", refreshToken)
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
 
         return if (response.status == HttpStatusCode.NoContent) {

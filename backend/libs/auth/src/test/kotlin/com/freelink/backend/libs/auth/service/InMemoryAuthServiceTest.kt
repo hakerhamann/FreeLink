@@ -25,11 +25,16 @@ class InMemoryAuthServiceTest {
         assertNotNull(registerResult)
         registerResult ?: return
 
-        val devicesAfterRegister = service.listDevices(registerResult.refreshToken)
+        assertEquals(registerResult.userId, service.resolveUserIdByAccessToken(registerResult.accessToken))
+
+        val devicesAfterRegister = service.listDevicesByAccessToken(registerResult.accessToken)
+        assertNotNull(devicesAfterRegister)
+        devicesAfterRegister ?: return
         assertEquals(1, devicesAfterRegister.size)
 
         assertTrue(service.logout(registerResult.refreshToken))
-        assertTrue(service.listDevices(registerResult.refreshToken).isEmpty())
+        assertNull(service.listDevicesByAccessToken(registerResult.accessToken))
+        assertNull(service.resolveUserIdByAccessToken(registerResult.accessToken))
 
         val loginResult = service.login(
             LoginCommand(
@@ -63,7 +68,9 @@ class InMemoryAuthServiceTest {
 
         assertNotEquals(registerResult.refreshToken, refreshed.refreshToken)
         assertNull(service.refresh(registerResult.refreshToken))
-        assertEquals(1, service.listDevices(refreshed.refreshToken).size)
+        val devicesAfterRefresh = service.listDevicesByAccessToken(refreshed.accessToken)
+        assertNotNull(devicesAfterRefresh)
+        assertEquals(1, devicesAfterRefresh?.size)
     }
 
     @Test
@@ -90,15 +97,19 @@ class InMemoryAuthServiceTest {
         assertNotNull(secondSession)
         secondSession ?: return
 
-        val allDevices = service.listDevices(firstSession.refreshToken)
+        val allDevices = service.listDevicesByAccessToken(firstSession.accessToken)
+        assertNotNull(allDevices)
+        allDevices ?: return
         assertEquals(2, allDevices.size)
 
         val secondDeviceId = secondSession.deviceId
-        assertTrue(service.revokeDevice(firstSession.refreshToken, secondDeviceId))
+        assertTrue(service.revokeDeviceByAccessToken(firstSession.accessToken, secondDeviceId))
 
-        val remainingDevices = service.listDevices(firstSession.refreshToken)
+        val remainingDevices = service.listDevicesByAccessToken(firstSession.accessToken)
+        assertNotNull(remainingDevices)
+        remainingDevices ?: return
         assertEquals(1, remainingDevices.size)
         assertFalse(remainingDevices.any { it.deviceId == secondDeviceId })
-        assertFalse(service.revokeDevice(firstSession.refreshToken, "unknown-device-id"))
+        assertFalse(service.revokeDeviceByAccessToken(firstSession.accessToken, "unknown-device-id"))
     }
 }
