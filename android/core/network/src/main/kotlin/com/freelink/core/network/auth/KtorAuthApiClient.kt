@@ -7,6 +7,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -90,6 +91,21 @@ class KtorAuthApiClient(
         }
 
         return AuthApiResult.Success(devices)
+    }
+
+    override suspend fun revokeDevice(refreshToken: String, deviceId: String): AuthApiResult<Unit> {
+        val response = client.delete("$baseUrl/devices/$deviceId") {
+            header("X-Refresh-Token", refreshToken)
+        }
+
+        return if (response.status == HttpStatusCode.NoContent) {
+            AuthApiResult.Success(Unit)
+        } else {
+            AuthApiResult.Failure(
+                message = "Failed to revoke device",
+                statusCode = response.status.value
+            )
+        }
     }
 
     private suspend fun postAuth(

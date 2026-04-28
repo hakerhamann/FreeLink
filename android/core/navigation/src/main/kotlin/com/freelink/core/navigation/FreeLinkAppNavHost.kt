@@ -16,6 +16,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.freelink.core.ui.FreeLinkPlaceholderScreen
 import com.freelink.feature.auth.ui.AuthRoute
+import com.freelink.feature.devices.ui.DeviceSessionsRoute
 
 private data class RootDestination(
     val route: String,
@@ -67,7 +68,7 @@ fun FreeLinkAppNavHost() {
             composable(route = "people") { FreeLinkPlaceholderScreen(title = "People") }
             composable(route = "spaces") { FreeLinkPlaceholderScreen(title = "Spaces") }
             composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
-            composable(route = "profile") { FreeLinkPlaceholderScreen(title = "Profile") }
+            composable(route = "profile") { DeviceSessionsRoute() }
         }
     }
 }
