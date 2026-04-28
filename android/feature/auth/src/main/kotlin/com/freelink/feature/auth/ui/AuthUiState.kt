@@ -1,6 +1,12 @@
 ﻿package com.freelink.feature.auth.ui
 
+enum class AuthMode {
+    LOGIN,
+    REGISTER
+}
+
 data class AuthUiState(
+    val mode: AuthMode = AuthMode.LOGIN,
     val login: String = "",
     val password: String = "",
     val isLoading: Boolean = false,

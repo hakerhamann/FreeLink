@@ -26,7 +26,7 @@ class DeviceSessionsViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, isLoggedOut = false) }
 
             when (val result = repository.loadDevices()) {
                 is DeviceSessionsResult.Success -> {
@@ -60,6 +60,33 @@ class DeviceSessionsViewModel(
                 is DeviceSessionsResult.Failure -> {
                     _uiState.update {
                         it.copy(revokingDeviceId = null, errorMessage = result.message)
+                    }
+                }
+            }
+        }
+    }
+
+    fun logoutCurrentSession() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoggingOut = true, errorMessage = null) }
+
+            when (val result = repository.logoutCurrentSession()) {
+                is DeviceSessionsResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoggingOut = false,
+                            isLoggedOut = true,
+                            sessions = emptyList()
+                        )
+                    }
+                }
+                is DeviceSessionsResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoggingOut = false,
+                            isLoggedOut = false,
+                            errorMessage = result.message
+                        )
                     }
                 }
             }

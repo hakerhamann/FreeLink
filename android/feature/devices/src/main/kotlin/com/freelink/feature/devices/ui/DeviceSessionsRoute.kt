@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -25,7 +26,9 @@ import com.freelink.core.network.auth.KtorAuthApiClient
 import com.freelink.feature.devices.data.DeviceSessionsRepository
 
 @Composable
-fun DeviceSessionsRoute() {
+fun DeviceSessionsRoute(
+    onLoggedOut: () -> Unit
+) {
     val context = LocalContext.current.applicationContext
     val repository = remember {
         DeviceSessionsRepository(
@@ -40,10 +43,17 @@ fun DeviceSessionsRoute() {
 
     val state by deviceSessionsViewModel.uiState.collectAsState()
 
+    LaunchedEffect(state.isLoggedOut) {
+        if (state.isLoggedOut) {
+            onLoggedOut()
+        }
+    }
+
     DeviceSessionsScreen(
         state = state,
         onRefresh = deviceSessionsViewModel::refresh,
-        onRevokeDevice = deviceSessionsViewModel::revokeDevice
+        onRevokeDevice = deviceSessionsViewModel::revokeDevice,
+        onLogout = deviceSessionsViewModel::logoutCurrentSession
     )
 }
 
@@ -51,7 +61,8 @@ fun DeviceSessionsRoute() {
 private fun DeviceSessionsScreen(
     state: DeviceSessionsUiState,
     onRefresh: () -> Unit,
-    onRevokeDevice: (String) -> Unit
+    onRevokeDevice: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -94,9 +105,17 @@ private fun DeviceSessionsScreen(
         OutlinedButton(
             onClick = onRefresh,
             modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isLoading
+            enabled = !state.isLoading && !state.isLoggingOut
         ) {
             Text("Обновить")
+        }
+
+        Button(
+            onClick = onLogout,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !state.isLoading && !state.isLoggingOut
+        ) {
+            Text(if (state.isLoggingOut) "Выходим..." else "Выйти")
         }
     }
 }

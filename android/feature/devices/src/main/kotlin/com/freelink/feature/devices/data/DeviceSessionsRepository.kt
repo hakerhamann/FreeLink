@@ -34,4 +34,17 @@ class DeviceSessionsRepository(
             is AuthApiResult.Failure -> DeviceSessionsResult.Failure(result.message)
         }
     }
+
+    suspend fun logoutCurrentSession(): DeviceSessionsResult<Unit> {
+        val session = authSessionStore.sessionFlow.first()
+            ?: return DeviceSessionsResult.Success(Unit)
+
+        val result = authApiClient.logout(session.refreshToken)
+        authSessionStore.clear()
+
+        return when (result) {
+            is AuthApiResult.Success -> DeviceSessionsResult.Success(Unit)
+            is AuthApiResult.Failure -> DeviceSessionsResult.Failure(result.message)
+        }
+    }
 }

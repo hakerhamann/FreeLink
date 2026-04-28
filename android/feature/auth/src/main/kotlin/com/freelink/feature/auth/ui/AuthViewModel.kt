@@ -28,7 +28,14 @@ class AuthViewModel(
         _uiState.update { it.copy(password = value, errorMessage = null) }
     }
 
-    fun submitLogin() {
+    fun toggleMode() {
+        _uiState.update {
+            val nextMode = if (it.mode == AuthMode.LOGIN) AuthMode.REGISTER else AuthMode.LOGIN
+            it.copy(mode = nextMode, errorMessage = null)
+        }
+    }
+
+    fun submitAuth() {
         val current = _uiState.value
         val login = current.login.trim()
         val password = current.password
@@ -43,7 +50,12 @@ class AuthViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            when (val loginResult = authRepository.login(login, password)) {
+            val authResult = when (current.mode) {
+                AuthMode.LOGIN -> authRepository.login(login, password)
+                AuthMode.REGISTER -> authRepository.register(login, password)
+            }
+
+            when (authResult) {
                 is AuthRepositoryResult.Success -> {
                     val devicesCount = when (val devicesResult = authRepository.loadDevices()) {
                         is AuthRepositoryResult.Success -> devicesResult.value.size
@@ -59,12 +71,13 @@ class AuthViewModel(
                         )
                     }
                 }
+
                 is AuthRepositoryResult.Failure -> {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isAuthorized = false,
-                            errorMessage = loginResult.message
+                            errorMessage = authResult.message
                         )
                     }
                 }

@@ -20,6 +20,22 @@ class AuthRepository(
 
     val sessionFlow: Flow<AuthSession?> = sessionStore.sessionFlow
 
+    suspend fun register(login: String, password: String): AuthRepositoryResult<AuthSession> {
+        return when (
+            val result = apiClient.register(
+                login = login,
+                password = password,
+                deviceName = "Android Device"
+            )
+        ) {
+            is AuthApiResult.Success -> {
+                sessionStore.save(result.value)
+                AuthRepositoryResult.Success(result.value)
+            }
+            is AuthApiResult.Failure -> AuthRepositoryResult.Failure(result.message)
+        }
+    }
+
     suspend fun login(login: String, password: String): AuthRepositoryResult<AuthSession> {
         return when (
             val result = apiClient.login(

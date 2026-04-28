@@ -9,6 +9,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,7 +52,8 @@ fun AuthRoute(
         state = state,
         onLoginChanged = authViewModel::onLoginChanged,
         onPasswordChanged = authViewModel::onPasswordChanged,
-        onLoginClick = authViewModel::submitLogin
+        onAuthClick = authViewModel::submitAuth,
+        onToggleMode = authViewModel::toggleMode
     )
 }
 
@@ -60,8 +62,11 @@ private fun AuthScreen(
     state: AuthUiState,
     onLoginChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
-    onLoginClick: () -> Unit
+    onAuthClick: () -> Unit,
+    onToggleMode: () -> Unit
 ) {
+    val isLoginMode = state.mode == AuthMode.LOGIN
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,7 +78,7 @@ private fun AuthScreen(
             style = MaterialTheme.typography.headlineLarge
         )
         Text(
-            text = "Вход по логину и паролю",
+            text = if (isLoginMode) "Вход по логину и паролю" else "Регистрация по логину и паролю",
             style = MaterialTheme.typography.titleMedium
         )
 
@@ -94,6 +99,20 @@ private fun AuthScreen(
             visualTransformation = PasswordVisualTransformation()
         )
 
+        TextButton(
+            onClick = onToggleMode,
+            enabled = !state.isLoading,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = if (isLoginMode) {
+                    "Нет аккаунта? Зарегистрироваться"
+                } else {
+                    "Уже есть аккаунт? Войти"
+                }
+            )
+        }
+
         if (state.knownDevicesCount > 0) {
             Text(
                 text = "Активных устройств: ${state.knownDevicesCount}",
@@ -110,11 +129,16 @@ private fun AuthScreen(
         }
 
         Button(
-            onClick = onLoginClick,
+            onClick = onAuthClick,
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isLoading
         ) {
-            Text(text = if (state.isLoading) "Вход..." else "Войти")
+            val title = when {
+                state.isLoading -> if (isLoginMode) "Вход..." else "Регистрация..."
+                isLoginMode -> "Войти"
+                else -> "Зарегистрироваться"
+            }
+            Text(text = title)
         }
     }
 }

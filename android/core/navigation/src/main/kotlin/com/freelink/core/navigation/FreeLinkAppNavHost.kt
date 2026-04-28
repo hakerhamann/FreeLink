@@ -68,7 +68,18 @@ fun FreeLinkAppNavHost() {
             composable(route = "people") { FreeLinkPlaceholderScreen(title = "People") }
             composable(route = "spaces") { FreeLinkPlaceholderScreen(title = "Spaces") }
             composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
-            composable(route = "profile") { DeviceSessionsRoute() }
+            composable(route = "profile") {
+                DeviceSessionsRoute(
+                    onLoggedOut = {
+                        navController.navigate(authRoute) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
     }
 }
