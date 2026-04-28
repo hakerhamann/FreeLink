@@ -13,16 +13,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.freelink.core.datastore.auth.AuthSessionStore
+import com.freelink.core.network.auth.KtorAuthApiClient
+import com.freelink.feature.auth.data.AuthRepository
 
 @Composable
 fun AuthRoute(
-    onAuthorized: () -> Unit,
-    authViewModel: AuthViewModel = viewModel()
+    onAuthorized: () -> Unit
 ) {
+    val context = LocalContext.current.applicationContext
+    val authRepository = remember {
+        AuthRepository(
+            apiClient = KtorAuthApiClient(),
+            sessionStore = AuthSessionStore.create(context)
+        )
+    }
+
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModel.factory(authRepository)
+    )
+
     val state by authViewModel.uiState.collectAsState()
 
     LaunchedEffect(state.isAuthorized) {
@@ -78,6 +94,13 @@ private fun AuthScreen(
             visualTransformation = PasswordVisualTransformation()
         )
 
+        if (state.knownDevicesCount > 0) {
+            Text(
+                text = "Активных устройств: ${state.knownDevicesCount}",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
         if (state.errorMessage != null) {
             Text(
                 text = state.errorMessage,
@@ -95,4 +118,3 @@ private fun AuthScreen(
         }
     }
 }
-

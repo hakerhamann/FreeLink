@@ -8,9 +8,13 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.kotlinx.coroutines.android)
     implementation(project(":android:core:ui"))
     implementation(project(":android:core:model"))
+    implementation(project(":android:core:network"))
+    implementation(project(":android:core:datastore"))
     testImplementation(libs.junit4)
 }
 
