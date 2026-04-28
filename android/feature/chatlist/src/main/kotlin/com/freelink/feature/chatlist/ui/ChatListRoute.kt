@@ -29,6 +29,7 @@ import com.freelink.core.database.chatlist.db.FreeLinkDatabaseFactory
 import com.freelink.core.datastore.auth.AuthSessionStore
 import com.freelink.core.network.auth.KtorAuthApiClient
 import com.freelink.core.network.chatlist.KtorChatListApiClient
+import com.freelink.core.network.chatlist.ws.KtorChatListWsEventsClient
 import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.chatlist.data.ChatListRepository
 import com.freelink.feature.chatlist.ui.model.ChatListItemUiModel
@@ -47,6 +48,7 @@ fun ChatListRoute() {
         ChatListRepository(
             authRepository = authRepository,
             chatListApiClient = KtorChatListApiClient(),
+            chatListWsEventsClient = KtorChatListWsEventsClient(),
             chatSummaryDao = database.chatSummaryDao()
         )
     }

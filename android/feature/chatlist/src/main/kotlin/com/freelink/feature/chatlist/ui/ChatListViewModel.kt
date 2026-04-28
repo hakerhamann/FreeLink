@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class ChatListViewModel(
@@ -20,6 +21,7 @@ class ChatListViewModel(
 ) : ViewModel() {
     private val searchQuery = MutableStateFlow("")
     private val unreadOnly = MutableStateFlow(false)
+    private var wsJob: Job? = null
 
     private val _uiState = MutableStateFlow(ChatListUiState())
     val uiState: StateFlow<ChatListUiState> = _uiState.asStateFlow()
@@ -27,6 +29,7 @@ class ChatListViewModel(
     init {
         observeChats()
         refresh()
+        startRealtimeSync()
     }
 
     fun onSearchQueryChanged(value: String) {
@@ -98,6 +101,18 @@ class ChatListViewModel(
                 }
             }
         }
+    }
+
+    private fun startRealtimeSync() {
+        wsJob?.cancel()
+        wsJob = viewModelScope.launch {
+            repository.observeRemoteUpdates()
+        }
+    }
+
+    override fun onCleared() {
+        wsJob?.cancel()
+        super.onCleared()
     }
 
     companion object {

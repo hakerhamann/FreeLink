@@ -18,6 +18,7 @@ import com.freelink.core.ui.FreeLinkPlaceholderScreen
 import com.freelink.feature.auth.ui.AuthRoute
 import com.freelink.feature.chatlist.ui.ChatListRoute
 import com.freelink.feature.devices.ui.DeviceSessionsRoute
+import com.freelink.feature.people.ui.PeopleRoute
 import com.freelink.feature.profile.ui.ProfileRoute
 import com.freelink.feature.settings.ui.SettingsRoute
 
@@ -70,7 +71,7 @@ fun FreeLinkAppNavHost() {
                 )
             }
             composable(route = "chats") { ChatListRoute() }
-            composable(route = "people") { FreeLinkPlaceholderScreen(title = "People") }
+            composable(route = "people") { PeopleRoute() }
             composable(route = "spaces") { FreeLinkPlaceholderScreen(title = "Spaces") }
             composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
             composable(route = "profile") {

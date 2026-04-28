@@ -9,6 +9,9 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
+import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.Frame
+import kotlinx.coroutines.delay
 
 fun main() {
     embeddedServer(Netty, port = 8081, host = "0.0.0.0", module = Application::freeLinkWsGatewayModule)
@@ -21,6 +24,19 @@ fun Application.freeLinkWsGatewayModule() {
     routing {
         get("/health") {
             call.respondText("ok")
+        }
+
+        webSocket("/ws/chats") {
+            val accessToken = call.request.queryParameters["accessToken"]
+            if (accessToken.isNullOrBlank()) {
+                return@webSocket
+            }
+
+            while (true) {
+                val payload = """{"type":"chat.updated","chatId":"chat-family","sentAtEpochMs":${System.currentTimeMillis()}}"""
+                outgoing.send(Frame.Text(payload))
+                delay(15_000)
+            }
         }
     }
 }
