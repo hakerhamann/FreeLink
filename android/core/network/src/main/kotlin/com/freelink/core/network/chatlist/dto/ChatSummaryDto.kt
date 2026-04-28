@@ -1,15 +1,13 @@
-package com.freelink.core.model.domain
+package com.freelink.core.network.chatlist.dto
 
-enum class ChatType {
-    DIRECT,
-    GROUP
-}
+import kotlinx.serialization.Serializable
 
-data class Chat(
+@Serializable
+data class ChatSummaryDto(
     val id: String,
     val title: String,
     val lastMessagePreview: String,
-    val type: ChatType,
+    val type: String,
     val unreadCount: Int,
     val isPinned: Boolean,
     val updatedAtEpochMs: Long

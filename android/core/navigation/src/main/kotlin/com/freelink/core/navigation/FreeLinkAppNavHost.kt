@@ -16,7 +16,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.freelink.core.ui.FreeLinkPlaceholderScreen
 import com.freelink.feature.auth.ui.AuthRoute
+import com.freelink.feature.chatlist.ui.ChatListRoute
 import com.freelink.feature.devices.ui.DeviceSessionsRoute
+import com.freelink.feature.profile.ui.ProfileRoute
 import com.freelink.feature.settings.ui.SettingsRoute
 
 private data class RootDestination(
@@ -33,6 +35,7 @@ private val rootDestinations = listOf(
 )
 
 private const val authRoute = "auth"
+private const val settingsRoute = "settings"
 private const val devicesRoute = "devices"
 
 @Composable
@@ -66,11 +69,33 @@ fun FreeLinkAppNavHost() {
                     }
                 )
             }
-            composable(route = "chats") { FreeLinkPlaceholderScreen(title = "Chats") }
+            composable(route = "chats") { ChatListRoute() }
             composable(route = "people") { FreeLinkPlaceholderScreen(title = "People") }
             composable(route = "spaces") { FreeLinkPlaceholderScreen(title = "Spaces") }
             composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
             composable(route = "profile") {
+                ProfileRoute(
+                    onOpenPrivacySettings = {
+                        navController.navigate(settingsRoute) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onOpenDevices = {
+                        navController.navigate(devicesRoute) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onLoggedOut = {
+                        navController.navigate(authRoute) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(route = settingsRoute) {
                 SettingsRoute(
                     onOpenDevices = {
                         navController.navigate(devicesRoute) {

@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":backend:libs:config"))
     implementation(project(":backend:libs:db"))
     implementation(project(":backend:libs:auth"))
+    implementation(project(":backend:libs:chats"))
     implementation(project(":backend:libs:crypto"))
     implementation(project(":backend:libs:messaging"))
     implementation(project(":backend:libs:groups"))
