@@ -6,13 +6,16 @@ import java.util.concurrent.ConcurrentHashMap
 
 class InMemoryChatsService : ChatsService {
     private val chatsByUserId = ConcurrentHashMap<String, List<ChatSummary>>()
+    private val archivedChatIdsByUserId = ConcurrentHashMap<String, MutableSet<String>>()
 
     override fun listChats(userId: String, query: String?, unreadOnly: Boolean): List<ChatSummary> {
         val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
         val normalizedQuery = query?.trim()?.lowercase().orEmpty()
+        val archivedChatIds = archivedChatIdsByUserId[userId].orEmpty()
 
         return source
             .asSequence()
+            .filterNot { chat -> chat.id in archivedChatIds }
             .filter { chat ->
                 if (normalizedQuery.isBlank()) {
                     true
@@ -26,6 +29,18 @@ class InMemoryChatsService : ChatsService {
             }
             .sortedWith(compareByDescending<ChatSummary> { it.isPinned }.thenByDescending { it.updatedAtEpochMs })
             .toList()
+    }
+
+    override fun archiveChat(userId: String, chatId: String): Boolean {
+        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
+        val normalizedChatId = chatId.trim()
+        if (source.none { it.id == normalizedChatId }) {
+            return false
+        }
+
+        val archivedChatIds = archivedChatIdsByUserId.computeIfAbsent(userId) { linkedSetOf() }
+        archivedChatIds.add(normalizedChatId)
+        return true
     }
 
     private fun buildSeedChats(): List<ChatSummary> {

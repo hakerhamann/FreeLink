@@ -8,4 +8,9 @@ interface ChatsService {
         query: String?,
         unreadOnly: Boolean
     ): List<ChatSummary>
+
+    fun archiveChat(
+        userId: String,
+        chatId: String
+    ): Boolean
 }
