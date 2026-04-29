@@ -8,6 +8,7 @@ import com.freelink.feature.chat.ui.model.DirectMessageAttachmentKindUiModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DirectChatUiMapperTest {
@@ -103,5 +104,26 @@ class DirectChatUiMapperTest {
         assertEquals(DirectMessageAttachmentKindUiModel.FILE, mapped.attachment?.kind)
         assertEquals("File attachment", mapped.attachment?.previewLabel)
         assertEquals("47.4 KB", mapped.attachment?.sizeLabel)
+    }
+
+    @Test
+    fun `message mapper exposes disappearing message expiry label`() {
+        val message = Message(
+            id = "message-expiring",
+            chatId = "chat-1",
+            senderUserId = "user-1",
+            body = "temporary",
+            createdAtEpochMs = 1_700_000_000_000,
+            expiresAtEpochMs = 1_700_003_600_000,
+            deliveryState = MessageDeliveryState.SENT
+        )
+
+        val mapped = message.toDirectUiModel(
+            currentUserId = "user-1",
+            replyToSnippet = null
+        )
+
+        assertNotNull(mapped.expiresAtLabel)
+        assertTrue(mapped.expiresAtLabel?.startsWith("Expires ") == true)
     }
 }

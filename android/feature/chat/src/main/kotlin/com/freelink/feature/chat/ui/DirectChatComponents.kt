@@ -132,6 +132,15 @@ fun MessageBubble(
                     textAlign = textAlign
                 )
             }
+            if (item.expiresAtLabel != null) {
+                Text(
+                    text = item.expiresAtLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = textAlign
+                )
+            }
             Text(
                 text = listOfNotNull(item.timeLabel, item.deliveryStateLabel).joinToString(" | "),
                 style = MaterialTheme.typography.labelSmall,

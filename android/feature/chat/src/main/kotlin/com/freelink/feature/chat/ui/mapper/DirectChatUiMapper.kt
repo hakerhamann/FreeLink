@@ -31,9 +31,18 @@ fun Message.toDirectUiModel(
         timeLabel = timeLabel,
         attachment = attachment?.toUiModel(),
         deliveryStateLabel = deliveryState.name.lowercase(),
+        expiresAtLabel = expiresAtEpochMs?.toExpiryLabel(),
         replyToSnippet = replyToSnippet,
         reactions = reactions
     )
+}
+
+private fun Long.toExpiryLabel(): String {
+    val expiryTime = Instant.ofEpochMilli(this)
+        .atZone(ZoneId.systemDefault())
+        .toLocalTime()
+        .format(timeFormatter)
+    return "Expires $expiryTime"
 }
 
 fun MediaAttachment.toUiModel(): DirectMessageAttachmentUiModel {
