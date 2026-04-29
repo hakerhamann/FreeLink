@@ -126,4 +126,23 @@ class DirectChatUiMapperTest {
         assertNotNull(mapped.expiresAtLabel)
         assertTrue(mapped.expiresAtLabel?.startsWith("Expires ") == true)
     }
+
+    @Test
+    fun `message mapper extracts first link preview url`() {
+        val message = Message(
+            id = "message-link",
+            chatId = "chat-1",
+            senderUserId = "user-1",
+            body = "Look https://freelink.local/privacy when you can",
+            createdAtEpochMs = 1_700_000_000_000,
+            deliveryState = MessageDeliveryState.SENT
+        )
+
+        val mapped = message.toDirectUiModel(
+            currentUserId = "user-1",
+            replyToSnippet = null
+        )
+
+        assertEquals("https://freelink.local/privacy", mapped.linkPreviewUrl)
+    }
 }

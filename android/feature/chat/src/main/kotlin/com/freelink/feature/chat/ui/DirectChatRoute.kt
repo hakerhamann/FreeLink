@@ -7,7 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.freelink.core.datastore.auth.AuthSessionStore
+import com.freelink.core.datastore.privacy.PrivacySettingsStore
 import com.freelink.core.encryption.TransportMessageEnvelopeFactory
+import com.freelink.core.model.domain.PrivacySettings
 import com.freelink.core.network.auth.KtorAuthApiClient
 import com.freelink.core.network.media.KtorMediaApiClient
 import com.freelink.core.network.messages.KtorMessageApiClient
@@ -28,6 +30,9 @@ fun DirectChatRoute(
             sessionStore = AuthSessionStore.create(context)
         )
     }
+    val privacySettingsStore = remember {
+        PrivacySettingsStore.create(context)
+    }
     val repository = remember {
         DirectChatRepository(
             authRepository = authRepository,
@@ -46,9 +51,18 @@ fun DirectChatRoute(
         )
     )
     val state by viewModel.uiState.collectAsState()
+    val privacySettings by privacySettingsStore.settingsFlow.collectAsState(
+        initial = PrivacySettings(
+            hiddenModeEnabled = false,
+            biometricLockRequired = false,
+            disappearingMessagesEnabled = false,
+            linkPreviewEnabled = true,
+            whoCanMessageMe = "trusted_contacts"
+        )
+    )
 
     DirectChatScreen(
-        state = state,
+        state = state.copy(linkPreviewEnabled = privacySettings.linkPreviewEnabled),
         onBack = onBack,
         onDraftChanged = viewModel::onDraftChanged,
         onSendMessage = viewModel::sendMessage,
