@@ -69,6 +69,18 @@ class ChatListViewModel(
         }
     }
 
+    fun archiveChat(chatId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(errorMessage = null) }
+            when (val result = repository.archiveChat(chatId)) {
+                is ChatListResult.Success -> Unit
+                is ChatListResult.Failure -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+            }
+        }
+    }
+
     private fun observeChats() {
         viewModelScope.launch {
             combine(

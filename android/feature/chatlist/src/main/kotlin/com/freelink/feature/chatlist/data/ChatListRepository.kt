@@ -69,6 +69,23 @@ class ChatListRepository(
         }
     }
 
+    suspend fun archiveChat(chatId: String): ChatListResult<Unit> {
+        return when (
+            val result = authRepository.authorizedRequest { session ->
+                chatListApiClient.archiveChat(
+                    accessToken = session.accessToken,
+                    chatId = chatId
+                )
+            }
+        ) {
+            is AuthRepositoryResult.Success -> {
+                chatSummaryDao.deleteById(chatId)
+                ChatListResult.Success(Unit)
+            }
+            is AuthRepositoryResult.Failure -> ChatListResult.Failure(result.message)
+        }
+    }
+
     suspend fun observeRemoteUpdates() {
         var reconnectAttempt = 0
 
