@@ -54,4 +54,16 @@ class InMemoryChatsServiceTest {
 
         assertTrue(chats.none { it.id == "chat-lera" })
     }
+
+    @Test
+    fun listArchivedChatsReturnsOnlyArchivedItems() {
+        val service = InMemoryChatsService()
+
+        assertTrue(service.archiveChat(userId = "user-1", chatId = "chat-lera"))
+        assertTrue(service.archiveChat(userId = "user-1", chatId = "chat-artem"))
+
+        val archived = service.listArchivedChats(userId = "user-1")
+
+        assertEquals(listOf("chat-lera", "chat-artem"), archived.map { it.id })
+    }
 }

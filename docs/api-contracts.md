@@ -19,6 +19,7 @@
 - `POST /media/complete`
 - `GET /privacy/settings`
 - `PUT /privacy/settings`
+- `GET /archive`
 - `POST /archive/{chatId}`
 
 ## WebSocket events
@@ -52,6 +53,7 @@
 - `GET /privacy/settings` and `PUT /privacy/settings` use `Authorization: Bearer <accessToken>`.
 - `GET /chats` uses `Authorization: Bearer <accessToken>` and supports optional `q` and `unreadOnly` query params.
 - `POST /archive/{chatId}` uses `Authorization: Bearer <accessToken>` and removes the chat from the default chat list.
+- `GET /archive` uses `Authorization: Bearer <accessToken>` and returns archived chat summaries.
 - On Android chat list, archive action now calls `POST /archive/{chatId}` and removes the chat from local Room cache after success.
 - `GET /messages?chatId=` and `POST /messages` use `Authorization: Bearer <accessToken>`.
 - `POST /messages/{messageId}/reactions` uses `Authorization: Bearer <accessToken>`.
