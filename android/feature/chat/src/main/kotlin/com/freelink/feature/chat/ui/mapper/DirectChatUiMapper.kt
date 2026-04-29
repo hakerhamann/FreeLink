@@ -32,6 +32,7 @@ fun Message.toDirectUiModel(
         attachment = attachment?.toUiModel(),
         deliveryStateLabel = deliveryState.name.lowercase(),
         expiresAtLabel = expiresAtEpochMs?.toExpiryLabel(),
+        linkPreviewUrl = body.extractFirstUrl(),
         replyToSnippet = replyToSnippet,
         reactions = reactions
     )
@@ -44,6 +45,12 @@ private fun Long.toExpiryLabel(): String {
         .format(timeFormatter)
     return "Expires $expiryTime"
 }
+
+private fun String.extractFirstUrl(): String? {
+    return urlPattern.find(this)?.value
+}
+
+private val urlPattern = Regex("""https?://\S+""")
 
 fun MediaAttachment.toUiModel(): DirectMessageAttachmentUiModel {
     val attachmentKind = type.toUiKind()

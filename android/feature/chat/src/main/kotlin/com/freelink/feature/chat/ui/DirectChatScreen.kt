@@ -69,6 +69,7 @@ fun DirectChatScreen(
             items(state.messages, key = { it.id }) { message ->
                 MessageBubble(
                     item = message,
+                    linkPreviewEnabled = state.linkPreviewEnabled,
                     onReply = { onReplyRequested(message.id) },
                     onReaction = { emoji -> onReactionRequested(message.id, emoji) },
                     onOpenAttachment = { downloadUrl -> uriHandler.openUri(downloadUrl) }

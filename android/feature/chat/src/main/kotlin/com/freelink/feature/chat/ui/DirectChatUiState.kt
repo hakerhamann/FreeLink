@@ -15,6 +15,7 @@ data class DirectChatUiState(
     val isAttaching: Boolean = false,
     val pendingAttachment: DirectMessageAttachmentUiModel? = null,
     val isPeerTyping: Boolean = false,
+    val linkPreviewEnabled: Boolean = true,
     val messages: List<DirectMessageUiModel> = emptyList(),
     val replyTarget: ReplyTargetUiModel? = null,
     val errorMessage: String? = null

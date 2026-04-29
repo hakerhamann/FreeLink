@@ -76,6 +76,7 @@ fun ComposerRow(
 @Composable
 fun MessageBubble(
     item: DirectMessageUiModel,
+    linkPreviewEnabled: Boolean,
     onReply: () -> Unit,
     onReaction: (String) -> Unit,
     onOpenAttachment: (String) -> Unit
@@ -123,6 +124,12 @@ fun MessageBubble(
                     textAlign = textAlign
                 )
             }
+            if (linkPreviewEnabled && item.linkPreviewUrl != null) {
+                LinkPreviewCard(
+                    url = item.linkPreviewUrl,
+                    textAlign = textAlign
+                )
+            }
             if (item.reactions.isNotEmpty()) {
                 Text(
                     text = item.reactions.entries.joinToString("  ") { "${it.key} ${it.value}" },
@@ -161,6 +168,38 @@ fun MessageBubble(
                 AssistChip(onClick = { onReaction("\u2764\uFE0F") }, label = { Text("\u2764\uFE0F") })
             }
         }
+    }
+}
+
+@Composable
+private fun LinkPreviewCard(
+    url: String,
+    textAlign: TextAlign
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                shape = MaterialTheme.shapes.small
+            )
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = "Link preview",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.secondary,
+            textAlign = textAlign,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Text(
+            text = url,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.outline,
+            textAlign = textAlign,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
