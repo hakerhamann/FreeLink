@@ -1,5 +1,6 @@
 package com.freelink.feature.chatlist.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,7 +38,9 @@ import com.freelink.feature.chatlist.ui.model.ChatListItemUiModel
 import com.freelink.feature.chatlist.ui.model.ChatListPersonUiModel
 
 @Composable
-fun ChatListRoute() {
+fun ChatListRoute(
+    onOpenChat: (chatId: String, chatTitle: String) -> Unit = { _, _ -> }
+) {
     val context = LocalContext.current.applicationContext
     val authRepository = remember {
         AuthRepository(
@@ -66,7 +69,8 @@ fun ChatListRoute() {
         state = state,
         onSearchQueryChanged = viewModel::onSearchQueryChanged,
         onUnreadOnlyChanged = viewModel::onUnreadOnlyChanged,
-        onRefresh = viewModel::refresh
+        onRefresh = viewModel::refresh,
+        onOpenChat = onOpenChat
     )
 }
 
@@ -75,7 +79,8 @@ private fun ChatListScreen(
     state: ChatListUiState,
     onSearchQueryChanged: (String) -> Unit,
     onUnreadOnlyChanged: (Boolean) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onOpenChat: (chatId: String, chatTitle: String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -146,7 +151,10 @@ private fun ChatListScreen(
                     SectionTitle(title = "Pinned")
                 }
                 items(state.pinnedChats, key = { it.id }) { item ->
-                    ChatListItem(item = item)
+                    ChatListItem(
+                        item = item,
+                        onClick = { onOpenChat(item.id, item.title) }
+                    )
                 }
             }
 
@@ -155,7 +163,10 @@ private fun ChatListScreen(
                     SectionTitle(title = "All chats")
                 }
                 items(state.otherChats, key = { it.id }) { item ->
-                    ChatListItem(item = item)
+                    ChatListItem(
+                        item = item,
+                        onClick = { onOpenChat(item.id, item.title) }
+                    )
                 }
             }
 
@@ -181,9 +192,13 @@ private fun SectionTitle(title: String) {
 }
 
 @Composable
-private fun ChatListItem(item: ChatListItemUiModel) {
+private fun ChatListItem(
+    item: ChatListItemUiModel,
+    onClick: () -> Unit
+) {
     Column(
         modifier = Modifier
+            .clickable(onClick = onClick)
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)

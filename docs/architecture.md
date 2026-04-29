@@ -28,3 +28,8 @@ This document describes the target architecture of FreeLink across Android and B
 - Password auth is isolated from message crypto.
 - Encrypted envelope is versioned and transport-safe.
 - No secret logging policy.
+
+## Current implementation notes
+
+- Chat list navigation opens `direct chat` route (`chat/{chatId}?title={chatTitle}`) from pinned and regular chat items.
+- `android:feature:chat` uses ViewModel + UDF state and provides a local send/typing/receive loop as Sprint 3 shell.
