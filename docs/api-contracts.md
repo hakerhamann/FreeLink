@@ -57,6 +57,7 @@
 - `GET /archive` uses `Authorization: Bearer <accessToken>` and returns archived chat summaries.
 - `DELETE /archive/{chatId}` uses `Authorization: Bearer <accessToken>` and restores an archived chat to the default chat list.
 - On Android, the settings menu opens an archive screen backed by `GET /archive`.
+- On Android, archived chats can be restored from the archive screen via `DELETE /archive/{chatId}`.
 - On Android chat list, archive action now calls `POST /archive/{chatId}` and removes the chat from local Room cache after success.
 - `GET /messages?chatId=` and `POST /messages` use `Authorization: Bearer <accessToken>`.
 - `POST /messages/{messageId}/reactions` uses `Authorization: Bearer <accessToken>`.

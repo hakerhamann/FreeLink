@@ -37,6 +37,7 @@ fun ArchiveRoute(
     ArchiveScreen(
         state = state,
         onBack = onBack,
-        onRefresh = viewModel::refresh
+        onRefresh = viewModel::refresh,
+        onRestoreChat = viewModel::restoreChat
     )
 }

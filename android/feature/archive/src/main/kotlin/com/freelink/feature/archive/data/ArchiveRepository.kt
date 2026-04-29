@@ -24,4 +24,18 @@ class ArchiveRepository(
             is AuthRepositoryResult.Failure -> ArchiveResult.Failure(result.message)
         }
     }
+
+    suspend fun restoreArchivedChat(chatId: String): ArchiveResult<Unit> {
+        return when (
+            val result = authRepository.authorizedRequest { session ->
+                chatListApiClient.restoreArchivedChat(
+                    accessToken = session.accessToken,
+                    chatId = chatId
+                )
+            }
+        ) {
+            is AuthRepositoryResult.Success -> ArchiveResult.Success(Unit)
+            is AuthRepositoryResult.Failure -> ArchiveResult.Failure(result.message)
+        }
+    }
 }

@@ -9,6 +9,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -71,6 +72,24 @@ class KtorChatListApiClient(
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
                 message = "Failed to archive chat",
+                statusCode = response.status.value
+            )
+        }
+
+        return AuthApiResult.Success(Unit)
+    }
+
+    override suspend fun restoreArchivedChat(
+        accessToken: String,
+        chatId: String
+    ): AuthApiResult<Unit> {
+        val response = client.delete("$baseUrl/archive/$chatId") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+
+        if (!response.status.isSuccess()) {
+            return AuthApiResult.Failure(
+                message = "Failed to restore archived chat",
                 statusCode = response.status.value
             )
         }
