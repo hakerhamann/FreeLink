@@ -14,5 +14,10 @@ interface ChatsService {
         chatId: String
     ): Boolean
 
+    fun restoreArchivedChat(
+        userId: String,
+        chatId: String
+    ): Boolean
+
     fun listArchivedChats(userId: String): List<ChatSummary>
 }

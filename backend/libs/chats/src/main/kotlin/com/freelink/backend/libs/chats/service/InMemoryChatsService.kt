@@ -43,6 +43,17 @@ class InMemoryChatsService : ChatsService {
         return true
     }
 
+    override fun restoreArchivedChat(userId: String, chatId: String): Boolean {
+        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
+        val normalizedChatId = chatId.trim()
+        if (source.none { it.id == normalizedChatId }) {
+            return false
+        }
+
+        val archivedChatIds = archivedChatIdsByUserId[userId] ?: return false
+        return archivedChatIds.remove(normalizedChatId)
+    }
+
     override fun listArchivedChats(userId: String): List<ChatSummary> {
         val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
         val archivedChatIds = archivedChatIdsByUserId[userId].orEmpty()
