@@ -51,6 +51,7 @@
 - `GET /devices` and `DELETE /devices/{deviceId}` use `Authorization: Bearer <accessToken>`.
 - `GET /privacy/settings` and `PUT /privacy/settings` use `Authorization: Bearer <accessToken>`.
 - `GET /chats` uses `Authorization: Bearer <accessToken>` and supports optional `q` and `unreadOnly` query params.
+- `POST /archive/{chatId}` uses `Authorization: Bearer <accessToken>` and removes the chat from the default chat list.
 - `GET /messages?chatId=` and `POST /messages` use `Authorization: Bearer <accessToken>`.
 - `POST /messages/{messageId}/reactions` uses `Authorization: Bearer <accessToken>`.
 - `POST /messages` accepts plain `body` and optional encrypted envelope payload for E2EE transport shape.

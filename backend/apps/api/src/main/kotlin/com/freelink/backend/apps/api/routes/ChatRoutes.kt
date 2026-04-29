@@ -4,10 +4,12 @@ import com.freelink.backend.libs.auth.service.AuthService
 import com.freelink.backend.libs.chats.domain.ChatSummary
 import com.freelink.backend.libs.chats.service.ChatsService
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -26,17 +28,7 @@ fun Route.installChatRoutes(
     chatsService: ChatsService
 ) {
     get("/chats") {
-        val accessToken = call.request.headers["Authorization"].extractBearerTokenForChatRoutes()
-        if (accessToken.isNullOrBlank()) {
-            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Authorization bearer token is required."))
-            return@get
-        }
-
-        val userId = authService.resolveUserIdByAccessToken(accessToken)
-        if (userId.isNullOrBlank()) {
-            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Invalid credentials or session state."))
-            return@get
-        }
+        val userId = call.requireAuthorizedUserIdForChatRoutes(authService) ?: return@get
 
         val query = call.request.queryParameters["q"]
         val unreadOnly = call.request.queryParameters["unreadOnly"]?.toBooleanStrictOrNull() ?: false
@@ -47,6 +39,26 @@ fun Route.installChatRoutes(
         )
 
         call.respond(chats.map { it.toDto() })
+    }
+
+    post("/archive/{chatId}") {
+        val userId = call.requireAuthorizedUserIdForChatRoutes(authService) ?: return@post
+        val chatId = call.parameters["chatId"]?.trim()
+        if (chatId.isNullOrBlank()) {
+            call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "chatId is required."))
+            return@post
+        }
+
+        val archived = chatsService.archiveChat(
+            userId = userId,
+            chatId = chatId
+        )
+        if (!archived) {
+            call.respond(HttpStatusCode.NotFound, ErrorResponseDto(message = "Chat not found."))
+            return@post
+        }
+
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 
@@ -69,4 +81,21 @@ private fun String?.extractBearerTokenForChatRoutes(): String? {
 
     val prefix = "Bearer "
     return if (startsWith(prefix)) substring(prefix.length).trim() else null
+}
+
+private suspend fun ApplicationCall.requireAuthorizedUserIdForChatRoutes(
+    authService: AuthService
+): String? {
+    val accessToken = request.headers["Authorization"].extractBearerTokenForChatRoutes()
+    if (accessToken.isNullOrBlank()) {
+        respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Authorization bearer token is required."))
+        return null
+    }
+
+    val userId = authService.resolveUserIdByAccessToken(accessToken)
+    if (userId.isNullOrBlank()) {
+        respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Invalid credentials or session state."))
+        return null
+    }
+    return userId
 }
