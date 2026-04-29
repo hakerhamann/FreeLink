@@ -8,6 +8,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlinx.serialization.Serializable
@@ -63,6 +64,26 @@ fun Route.installChatRoutes(
         if (!archived) {
             call.respond(HttpStatusCode.NotFound, ErrorResponseDto(message = "Chat not found."))
             return@post
+        }
+
+        call.respond(HttpStatusCode.NoContent)
+    }
+
+    delete("/archive/{chatId}") {
+        val userId = call.requireAuthorizedUserIdForChatRoutes(authService) ?: return@delete
+        val chatId = call.parameters["chatId"]?.trim()
+        if (chatId.isNullOrBlank()) {
+            call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "chatId is required."))
+            return@delete
+        }
+
+        val restored = chatsService.restoreArchivedChat(
+            userId = userId,
+            chatId = chatId
+        )
+        if (!restored) {
+            call.respond(HttpStatusCode.NotFound, ErrorResponseDto(message = "Archived chat not found."))
+            return@delete
         }
 
         call.respond(HttpStatusCode.NoContent)

@@ -21,6 +21,7 @@
 - `PUT /privacy/settings`
 - `GET /archive`
 - `POST /archive/{chatId}`
+- `DELETE /archive/{chatId}`
 
 ## WebSocket events
 
@@ -54,6 +55,7 @@
 - `GET /chats` uses `Authorization: Bearer <accessToken>` and supports optional `q` and `unreadOnly` query params.
 - `POST /archive/{chatId}` uses `Authorization: Bearer <accessToken>` and removes the chat from the default chat list.
 - `GET /archive` uses `Authorization: Bearer <accessToken>` and returns archived chat summaries.
+- `DELETE /archive/{chatId}` uses `Authorization: Bearer <accessToken>` and restores an archived chat to the default chat list.
 - On Android, the settings menu opens an archive screen backed by `GET /archive`.
 - On Android chat list, archive action now calls `POST /archive/{chatId}` and removes the chat from local Room cache after success.
 - `GET /messages?chatId=` and `POST /messages` use `Authorization: Bearer <accessToken>`.
