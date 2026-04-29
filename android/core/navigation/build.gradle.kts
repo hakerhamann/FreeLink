@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(project(":android:core:ui"))
     implementation(project(":android:feature:auth"))
+    implementation(project(":android:feature:archive"))
     implementation(project(":android:feature:chat"))
     implementation(project(":android:feature:chatlist"))
     implementation(project(":android:feature:people"))

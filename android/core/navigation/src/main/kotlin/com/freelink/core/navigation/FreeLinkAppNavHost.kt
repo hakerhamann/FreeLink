@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.freelink.core.ui.FreeLinkPlaceholderScreen
+import com.freelink.feature.archive.ui.ArchiveRoute
 import com.freelink.feature.auth.ui.AuthRoute
 import com.freelink.feature.chat.ui.DirectChatRoute
 import com.freelink.feature.chatlist.ui.ChatListRoute
@@ -44,6 +45,7 @@ private const val directChatRoute = "chat/{chatId}?title={chatTitle}"
 private const val settingsRoute = "settings"
 private const val devicesRoute = "devices"
 private const val mediaGalleryRoute = "media-gallery"
+private const val archiveRoute = "archive"
 
 @Composable
 fun FreeLinkAppNavHost() {
@@ -144,6 +146,11 @@ fun FreeLinkAppNavHost() {
                             launchSingleTop = true
                         }
                     },
+                    onOpenArchive = {
+                        navController.navigate(archiveRoute) {
+                            launchSingleTop = true
+                        }
+                    },
                     onLoggedOut = {
                         navController.navigate(authRoute) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -152,6 +159,11 @@ fun FreeLinkAppNavHost() {
                             launchSingleTop = true
                         }
                     }
+                )
+            }
+            composable(route = archiveRoute) {
+                ArchiveRoute(
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(route = devicesRoute) {
