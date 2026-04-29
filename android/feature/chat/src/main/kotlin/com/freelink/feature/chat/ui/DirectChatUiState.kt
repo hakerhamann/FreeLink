@@ -2,6 +2,7 @@ package com.freelink.feature.chat.ui
 
 import com.freelink.feature.chat.ui.model.DirectMessageUiModel
 import com.freelink.feature.chat.ui.model.DirectMessageAttachmentUiModel
+import com.freelink.feature.chat.ui.model.AttachmentTrayActionUiModel
 import com.freelink.feature.chat.ui.model.ReplyTargetUiModel
 
 data class DirectChatUiState(
@@ -10,6 +11,7 @@ data class DirectChatUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val draft: String = "",
+    val attachmentTrayActions: List<AttachmentTrayActionUiModel> = defaultAttachmentTrayActions(),
     val isAttaching: Boolean = false,
     val pendingAttachment: DirectMessageAttachmentUiModel? = null,
     val isPeerTyping: Boolean = false,

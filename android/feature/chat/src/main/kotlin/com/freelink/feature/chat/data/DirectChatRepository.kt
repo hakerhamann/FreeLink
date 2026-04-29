@@ -75,14 +75,14 @@ class DirectChatRepository(
     suspend fun uploadSampleAttachment(chatId: String): DirectChatResult<MediaAttachment> {
         return when (
             val result = authRepository.authorizedRequest { session ->
-                val digest = "chat-$chatId-${System.currentTimeMillis()}"
+                val preset = sampleAttachmentPreset(chatId, attachmentType = AttachmentType.PHOTO)
                 val init = mediaApiClient.initUpload(
                     accessToken = session.accessToken,
-                    fileName = "sample-$chatId.jpg",
-                    mimeType = "image/jpeg",
-                    digestSha256 = digest,
-                    byteSize = 2048,
-                    attachmentType = AttachmentType.PHOTO
+                    fileName = preset.fileName,
+                    mimeType = preset.mimeType,
+                    digestSha256 = preset.digestSha256,
+                    byteSize = preset.byteSize,
+                    attachmentType = preset.attachmentType
                 )
                 when (init) {
                     is com.freelink.core.network.auth.AuthApiResult.Failure -> init
@@ -100,6 +100,84 @@ class DirectChatRepository(
             is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
         }
     }
+
+    suspend fun uploadSampleAttachment(
+        chatId: String,
+        attachmentType: AttachmentType
+    ): DirectChatResult<MediaAttachment> {
+        return when (
+            val result = authRepository.authorizedRequest { session ->
+                val preset = sampleAttachmentPreset(chatId, attachmentType)
+                val init = mediaApiClient.initUpload(
+                    accessToken = session.accessToken,
+                    fileName = preset.fileName,
+                    mimeType = preset.mimeType,
+                    digestSha256 = preset.digestSha256,
+                    byteSize = preset.byteSize,
+                    attachmentType = preset.attachmentType
+                )
+                when (init) {
+                    is com.freelink.core.network.auth.AuthApiResult.Failure -> init
+                    is com.freelink.core.network.auth.AuthApiResult.Success -> {
+                        val uploadId = init.value.uploadId
+                        mediaApiClient.completeUpload(
+                            accessToken = session.accessToken,
+                            uploadId = uploadId
+                        )
+                    }
+                }
+            }
+        ) {
+            is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value.toAttachment())
+            is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
+        }
+    }
+
+    private fun sampleAttachmentPreset(
+        chatId: String,
+        attachmentType: AttachmentType
+    ): SampleAttachmentPreset {
+        val timestamp = System.currentTimeMillis()
+        val baseName = "chat-$chatId-$timestamp"
+        return when (attachmentType) {
+            AttachmentType.PHOTO -> SampleAttachmentPreset(
+                fileName = "photo-$chatId.jpg",
+                mimeType = "image/jpeg",
+                digestSha256 = "$baseName-photo",
+                byteSize = 2_048,
+                attachmentType = attachmentType
+            )
+            AttachmentType.FILE -> SampleAttachmentPreset(
+                fileName = "brief-$chatId.pdf",
+                mimeType = "application/pdf",
+                digestSha256 = "$baseName-file",
+                byteSize = 48_512,
+                attachmentType = attachmentType
+            )
+            AttachmentType.VOICE -> SampleAttachmentPreset(
+                fileName = "voice-$chatId.m4a",
+                mimeType = "audio/mp4",
+                digestSha256 = "$baseName-voice",
+                byteSize = 8_192,
+                attachmentType = attachmentType
+            )
+            AttachmentType.VIDEO -> SampleAttachmentPreset(
+                fileName = "clip-$chatId.mp4",
+                mimeType = "video/mp4",
+                digestSha256 = "$baseName-video",
+                byteSize = 120_000,
+                attachmentType = attachmentType
+            )
+        }
+    }
+
+    private data class SampleAttachmentPreset(
+        val fileName: String,
+        val mimeType: String,
+        val digestSha256: String,
+        val byteSize: Long,
+        val attachmentType: AttachmentType
+    )
 
     suspend fun setReaction(
         chatId: String,
