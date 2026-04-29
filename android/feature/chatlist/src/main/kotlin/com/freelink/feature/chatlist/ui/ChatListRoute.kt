@@ -1,6 +1,5 @@
 package com.freelink.feature.chatlist.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.freelink.core.database.chatlist.db.FreeLinkDatabaseFactory
@@ -34,8 +32,6 @@ import com.freelink.core.network.chatlist.ws.KtorChatListWsEventsClient
 import com.freelink.core.network.people.KtorPeopleApiClient
 import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.chatlist.data.ChatListRepository
-import com.freelink.feature.chatlist.ui.model.ChatListItemUiModel
-import com.freelink.feature.chatlist.ui.model.ChatListPersonUiModel
 
 @Composable
 fun ChatListRoute(
@@ -70,6 +66,7 @@ fun ChatListRoute(
         onSearchQueryChanged = viewModel::onSearchQueryChanged,
         onUnreadOnlyChanged = viewModel::onUnreadOnlyChanged,
         onRefresh = viewModel::refresh,
+        onArchiveChat = viewModel::archiveChat,
         onOpenChat = onOpenChat
     )
 }
@@ -80,6 +77,7 @@ private fun ChatListScreen(
     onSearchQueryChanged: (String) -> Unit,
     onUnreadOnlyChanged: (Boolean) -> Unit,
     onRefresh: () -> Unit,
+    onArchiveChat: (chatId: String) -> Unit,
     onOpenChat: (chatId: String, chatTitle: String) -> Unit
 ) {
     Column(
@@ -153,7 +151,8 @@ private fun ChatListScreen(
                 items(state.pinnedChats, key = { it.id }) { item ->
                     ChatListItem(
                         item = item,
-                        onClick = { onOpenChat(item.id, item.title) }
+                        onClick = { onOpenChat(item.id, item.title) },
+                        onArchive = { onArchiveChat(item.id) }
                     )
                 }
             }
@@ -165,7 +164,8 @@ private fun ChatListScreen(
                 items(state.otherChats, key = { it.id }) { item ->
                     ChatListItem(
                         item = item,
-                        onClick = { onOpenChat(item.id, item.title) }
+                        onClick = { onOpenChat(item.id, item.title) },
+                        onArchive = { onArchiveChat(item.id) }
                     )
                 }
             }
@@ -179,108 +179,5 @@ private fun ChatListScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary
-    )
-}
-
-@Composable
-private fun ChatListItem(
-    item: ChatListItemUiModel,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = item.chatTypeLabel,
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (item.unreadBadge != null) {
-                    Text(
-                        text = item.unreadBadge,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Text(
-                    text = item.updatedAtLabel,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-
-        Text(
-            text = item.lastMessagePreview,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 1
-        )
-
-        HorizontalDivider()
-    }
-}
-
-@Composable
-private fun PersonSearchItem(item: ChatListPersonUiModel) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = item.displayName,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = item.status,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (item.isOnline) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-            )
-        }
-
-        Text(
-            text = item.login,
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        HorizontalDivider()
     }
 }

@@ -11,6 +11,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -57,6 +58,24 @@ class KtorChatListApiClient(
         }.map { it.toDomain() }
 
         return AuthApiResult.Success(chats)
+    }
+
+    override suspend fun archiveChat(
+        accessToken: String,
+        chatId: String
+    ): AuthApiResult<Unit> {
+        val response = client.post("$baseUrl/archive/$chatId") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+
+        if (!response.status.isSuccess()) {
+            return AuthApiResult.Failure(
+                message = "Failed to archive chat",
+                statusCode = response.status.value
+            )
+        }
+
+        return AuthApiResult.Success(Unit)
     }
 
     private fun HttpStatusCode.isSuccess(): Boolean {

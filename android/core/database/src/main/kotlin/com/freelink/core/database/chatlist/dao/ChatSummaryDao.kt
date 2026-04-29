@@ -17,4 +17,7 @@ interface ChatSummaryDao {
 
     @Query("DELETE FROM chat_summaries")
     suspend fun clearAll()
+
+    @Query("DELETE FROM chat_summaries WHERE id = :chatId")
+    suspend fun deleteById(chatId: String)
 }
