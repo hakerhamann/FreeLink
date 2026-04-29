@@ -1,5 +1,6 @@
 package com.freelink.core.navigation
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -16,6 +17,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.freelink.core.ui.FreeLinkPlaceholderScreen
 import com.freelink.feature.auth.ui.AuthRoute
+import com.freelink.feature.chat.ui.DirectChatRoute
 import com.freelink.feature.chatlist.ui.ChatListRoute
 import com.freelink.feature.devices.ui.DeviceSessionsRoute
 import com.freelink.feature.people.ui.PeopleRoute
@@ -36,6 +38,7 @@ private val rootDestinations = listOf(
 )
 
 private const val authRoute = "auth"
+private const val directChatRoute = "chat/{chatId}?title={chatTitle}"
 private const val settingsRoute = "settings"
 private const val devicesRoute = "devices"
 
@@ -70,7 +73,24 @@ fun FreeLinkAppNavHost() {
                     }
                 )
             }
-            composable(route = "chats") { ChatListRoute() }
+            composable(route = "chats") {
+                ChatListRoute { chatId, chatTitle ->
+                    val encodedChatId = Uri.encode(chatId)
+                    val encodedTitle = Uri.encode(chatTitle)
+                    navController.navigate("chat/$encodedChatId?title=$encodedTitle") {
+                        launchSingleTop = true
+                    }
+                }
+            }
+            composable(route = directChatRoute) { backStackEntry ->
+                val chatId = backStackEntry.arguments?.getString("chatId").orEmpty()
+                val chatTitle = backStackEntry.arguments?.getString("chatTitle").orEmpty()
+                DirectChatRoute(
+                    chatId = chatId,
+                    chatTitle = chatTitle,
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable(route = "people") { PeopleRoute() }
             composable(route = "spaces") { FreeLinkPlaceholderScreen(title = "Spaces") }
             composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
