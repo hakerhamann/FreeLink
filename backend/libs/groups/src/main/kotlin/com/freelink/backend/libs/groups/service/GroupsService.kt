@@ -1,5 +1,6 @@
 package com.freelink.backend.libs.groups.service
 
+import com.freelink.backend.libs.groups.domain.GroupDetails
 import com.freelink.backend.libs.groups.domain.GroupSummary
 
 data class CreateGroupCommand(
@@ -9,6 +10,8 @@ data class CreateGroupCommand(
 
 interface GroupsService {
     fun listGroups(userId: String, query: String?): List<GroupSummary>
+
+    fun getGroupDetails(userId: String, groupId: String): GroupDetails?
 
     fun createGroup(ownerUserId: String, command: CreateGroupCommand): GroupSummary
 }

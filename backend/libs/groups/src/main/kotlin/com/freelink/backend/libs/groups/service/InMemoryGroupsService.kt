@@ -1,5 +1,7 @@
 package com.freelink.backend.libs.groups.service
 
+import com.freelink.backend.libs.groups.domain.GroupDetails
+import com.freelink.backend.libs.groups.domain.GroupMember
 import com.freelink.backend.libs.groups.domain.GroupRole
 import com.freelink.backend.libs.groups.domain.GroupSummary
 import java.util.UUID
@@ -8,11 +10,8 @@ import java.util.concurrent.ConcurrentHashMap
 class InMemoryGroupsService : GroupsService {
     private val groupsById = ConcurrentHashMap<String, StoredGroup>()
 
-    init {
-        seed()
-    }
-
     override fun listGroups(userId: String, query: String?): List<GroupSummary> {
+        ensureUserSeeded(userId)
         val normalizedQuery = query?.trim()?.lowercase().orEmpty()
         return groupsById.values
             .asSequence()
@@ -36,7 +35,31 @@ class InMemoryGroupsService : GroupsService {
             .toList()
     }
 
+    override fun getGroupDetails(userId: String, groupId: String): GroupDetails? {
+        ensureUserSeeded(userId)
+        val group = groupsById[groupId] ?: return null
+        val role = group.memberRoles[userId] ?: return null
+        return GroupDetails(
+            summary = GroupSummary(
+                id = group.id,
+                title = group.title,
+                membersCount = group.memberRoles.size,
+                myRole = role,
+                lastMessagePreview = group.lastMessagePreview,
+                updatedAtEpochMs = group.updatedAtEpochMs
+            ),
+            members = group.memberRoles.map { (memberUserId, memberRole) ->
+                GroupMember(
+                    userId = memberUserId,
+                    displayName = memberDisplayName(memberUserId, userId),
+                    role = memberRole
+                )
+            }
+        )
+    }
+
     override fun createGroup(ownerUserId: String, command: CreateGroupCommand): GroupSummary {
+        ensureUserSeeded(ownerUserId)
         val now = System.currentTimeMillis()
         val groupId = "group-${UUID.randomUUID().toString().take(8)}"
         val roles = linkedMapOf<String, GroupRole>()
@@ -68,14 +91,19 @@ class InMemoryGroupsService : GroupsService {
         )
     }
 
-    private fun seed() {
+    private fun ensureUserSeeded(userId: String) {
+        val alreadyHasGroups = groupsById.values.any { it.memberRoles.containsKey(userId) }
+        if (alreadyHasGroups) {
+            return
+        }
+
         val now = System.currentTimeMillis()
         putSeed(
             StoredGroup(
-                id = "group-family",
+                id = "group-family-${userId.takeLast(4)}",
                 title = "Family",
                 memberRoles = linkedMapOf(
-                    "user-demo" to GroupRole.OWNER,
+                    userId to GroupRole.OWNER,
                     "user-lera" to GroupRole.MEMBER,
                     "user-artem" to GroupRole.MEMBER
                 ),
@@ -85,10 +113,10 @@ class InMemoryGroupsService : GroupsService {
         )
         putSeed(
             StoredGroup(
-                id = "group-weekend",
+                id = "group-weekend-${userId.takeLast(4)}",
                 title = "Weekend plans",
                 memberRoles = linkedMapOf(
-                    "user-demo" to GroupRole.ADMIN,
+                    userId to GroupRole.ADMIN,
                     "user-masha" to GroupRole.OWNER,
                     "user-ilya" to GroupRole.MEMBER
                 ),
@@ -100,6 +128,20 @@ class InMemoryGroupsService : GroupsService {
 
     private fun putSeed(group: StoredGroup) {
         groupsById[group.id] = group
+    }
+
+    private fun memberDisplayName(memberUserId: String, currentUserId: String): String {
+        if (memberUserId == currentUserId) {
+            return "You"
+        }
+
+        return when (memberUserId) {
+            "user-lera" -> "Lera"
+            "user-artem" -> "Artem"
+            "user-masha" -> "Masha"
+            "user-ilya" -> "Ilya"
+            else -> memberUserId.takeLast(8)
+        }
     }
 
     private data class StoredGroup(

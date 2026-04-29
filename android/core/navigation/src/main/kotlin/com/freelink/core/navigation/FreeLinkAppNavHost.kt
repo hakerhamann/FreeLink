@@ -93,7 +93,15 @@ fun FreeLinkAppNavHost() {
                 )
             }
             composable(route = "people") { PeopleRoute() }
-            composable(route = "spaces") { GroupRoute() }
+            composable(route = "spaces") {
+                GroupRoute { groupId, groupTitle ->
+                    val encodedChatId = Uri.encode(groupId)
+                    val encodedTitle = Uri.encode(groupTitle)
+                    navController.navigate("chat/$encodedChatId?title=$encodedTitle") {
+                        launchSingleTop = true
+                    }
+                }
+            }
             composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
             composable(route = "profile") {
                 ProfileRoute(
