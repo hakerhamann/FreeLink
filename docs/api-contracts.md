@@ -73,7 +73,7 @@
 - `POST /media/complete` now finalizes a session into stored media metadata with a blob download URL.
 - On Android, `Media Gallery` now provides a manual Sprint 5 smoke-flow for `init upload` and `complete upload`, reachable from profile shared photos.
 - On Android direct chat, `Attach sample` now runs media `init/complete`, keeps pending attachment state in composer, and renders attachment cards inside message bubbles.
-- On Android direct chat, the composer now exposes a small attachment tray for `Photo / File / Voice` presets wired to the same media upload flow.
+- On Android direct chat, the composer now exposes a small attachment tray for `Photo / Video / File / Voice` presets wired to the same media upload flow.
 - On Android direct chat, attachment cards now expose an `Open` action backed by the media `downloadUrl`.
 - On Android direct chat, voice attachments now render with a waveform stub and derived duration label for MVP playback UX.
 - On Android direct chat, photo/video/file attachments now render type-specific preview states before opening the media URL.
