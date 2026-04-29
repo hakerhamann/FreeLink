@@ -41,6 +41,13 @@ fun Route.installChatRoutes(
         call.respond(chats.map { it.toDto() })
     }
 
+    get("/archive") {
+        val userId = call.requireAuthorizedUserIdForChatRoutes(authService) ?: return@get
+
+        val chats = chatsService.listArchivedChats(userId)
+        call.respond(chats.map { it.toDto() })
+    }
+
     post("/archive/{chatId}") {
         val userId = call.requireAuthorizedUserIdForChatRoutes(authService) ?: return@post
         val chatId = call.parameters["chatId"]?.trim()

@@ -43,6 +43,17 @@ class InMemoryChatsService : ChatsService {
         return true
     }
 
+    override fun listArchivedChats(userId: String): List<ChatSummary> {
+        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
+        val archivedChatIds = archivedChatIdsByUserId[userId].orEmpty()
+
+        return source
+            .asSequence()
+            .filter { chat -> chat.id in archivedChatIds }
+            .sortedByDescending { it.updatedAtEpochMs }
+            .toList()
+    }
+
     private fun buildSeedChats(): List<ChatSummary> {
         val now = System.currentTimeMillis()
         return listOf(
