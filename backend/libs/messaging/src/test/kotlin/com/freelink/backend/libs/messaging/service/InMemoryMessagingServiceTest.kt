@@ -3,6 +3,7 @@ package com.freelink.backend.libs.messaging.service
 import com.freelink.backend.libs.messaging.domain.MessageDeliveryState
 import com.freelink.backend.libs.messaging.domain.MessageAttachment
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
@@ -27,7 +28,8 @@ class InMemoryMessagingServiceTest {
                 downloadUrl = "https://example.local/test.jpg"
             ),
             envelope = null,
-            replyToMessageId = replyTargetId
+            replyToMessageId = replyTargetId,
+            expiresAtEpochMs = null
         )
         val after = service.listMessages(userId = "user-1", chatId = "chat-lera", limit = null)
 
@@ -49,7 +51,8 @@ class InMemoryMessagingServiceTest {
             body = "one",
             attachment = null,
             envelope = null,
-            replyToMessageId = null
+            replyToMessageId = null,
+            expiresAtEpochMs = null
         )
         service.sendMessage(
             userId = "user-1",
@@ -57,12 +60,44 @@ class InMemoryMessagingServiceTest {
             body = "two",
             attachment = null,
             envelope = null,
-            replyToMessageId = null
+            replyToMessageId = null,
+            expiresAtEpochMs = null
         )
 
         val limited = service.listMessages(userId = "user-1", chatId = "chat-artem", limit = 1)
         assertEquals(1, limited.size)
         assertEquals("two", limited.first().body)
+    }
+
+    @Test
+    fun listMessagesHidesExpiredMessages() {
+        var now = 1_000L
+        val service = InMemoryMessagingService(currentTimeEpochMs = { now })
+
+        val expired = service.sendMessage(
+            userId = "user-1",
+            chatId = "chat-expiring",
+            body = "temporary",
+            attachment = null,
+            envelope = null,
+            replyToMessageId = null,
+            expiresAtEpochMs = 1_500L
+        )
+        service.sendMessage(
+            userId = "user-1",
+            chatId = "chat-expiring",
+            body = "persistent",
+            attachment = null,
+            envelope = null,
+            replyToMessageId = null,
+            expiresAtEpochMs = null
+        )
+
+        now = 2_000L
+        val messages = service.listMessages(userId = "user-1", chatId = "chat-expiring", limit = null)
+
+        assertFalse(messages.any { it.id == expired.id })
+        assertEquals("persistent", messages.last().body)
     }
 
     @Test

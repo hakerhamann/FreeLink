@@ -8,13 +8,18 @@ import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemoryMessagingService : MessagingService {
+class InMemoryMessagingService(
+    private val currentTimeEpochMs: () -> Long = { System.currentTimeMillis() }
+) : MessagingService {
     private val messagesByChatId = ConcurrentHashMap<String, MutableList<ChatMessage>>()
     private val reactionsByMessageId = ConcurrentHashMap<String, MutableMap<String, String>>()
 
     override fun listMessages(userId: String, chatId: String, limit: Int?): List<ChatMessage> {
+        val now = currentTimeEpochMs()
         val source = messagesByChatId.computeIfAbsent(chatId) { createSeedMessages(chatId) }
-        val snapshot = synchronized(source) { source.toList() }.sortedBy { it.createdAtEpochMs }
+        val snapshot = synchronized(source) { source.toList() }
+            .filterNot { message -> message.isExpired(now) }
+            .sortedBy { it.createdAtEpochMs }
 
         return if (limit == null || limit <= 0 || limit >= snapshot.size) {
             snapshot
@@ -29,7 +34,8 @@ class InMemoryMessagingService : MessagingService {
         body: String,
         attachment: MessageAttachment?,
         envelope: EncryptedEnvelope?,
-        replyToMessageId: String?
+        replyToMessageId: String?,
+        expiresAtEpochMs: Long?
     ): ChatMessage {
         val source = messagesByChatId.computeIfAbsent(chatId) { createSeedMessages(chatId) }
         val replyId = replyToMessageId?.takeIf { targetId ->
@@ -41,7 +47,8 @@ class InMemoryMessagingService : MessagingService {
             chatId = chatId,
             senderUserId = userId,
             body = body,
-            createdAtEpochMs = System.currentTimeMillis(),
+            createdAtEpochMs = currentTimeEpochMs(),
+            expiresAtEpochMs = expiresAtEpochMs,
             deliveryState = MessageDeliveryState.SENT,
             attachment = attachment,
             envelope = envelope,
@@ -88,8 +95,12 @@ class InMemoryMessagingService : MessagingService {
             .toMap(linkedMapOf())
     }
 
+    private fun ChatMessage.isExpired(now: Long): Boolean {
+        return expiresAtEpochMs?.let { expiresAt -> expiresAt <= now } ?: false
+    }
+
     private fun createSeedMessages(chatId: String): MutableList<ChatMessage> {
-        val now = System.currentTimeMillis()
+        val now = currentTimeEpochMs()
         val first = ChatMessage(
             id = "$chatId-seed-1",
             chatId = chatId,

@@ -9,6 +9,7 @@ data class ChatMessage(
     val body: String,
     val createdAtEpochMs: Long,
     val deliveryState: MessageDeliveryState,
+    val expiresAtEpochMs: Long? = null,
     val attachment: MessageAttachment? = null,
     val envelope: EncryptedEnvelope? = null,
     val replyToMessageId: String? = null,
