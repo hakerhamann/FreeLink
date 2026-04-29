@@ -51,12 +51,19 @@ class ProfileViewModel(
     private fun observeSession() {
         viewModelScope.launch {
             authRepository.sessionFlow.collect { session ->
+                val sections = buildProfileSections(session?.userId)
                 _uiState.update {
                     it.copy(
                         userId = session?.userId,
                         deviceId = session?.deviceId,
                         isSessionAvailable = session != null,
-                        isLoggedOut = session == null && it.isLoggedOut
+                        isLoggedOut = session == null && it.isLoggedOut,
+                        title = sections.title,
+                        subtitle = sections.subtitle,
+                        sharedChats = sections.sharedChats,
+                        sharedPhotos = sections.sharedPhotos,
+                        pinnedMessages = sections.pinnedMessages,
+                        trustedContacts = sections.trustedContacts
                     )
                 }
             }
