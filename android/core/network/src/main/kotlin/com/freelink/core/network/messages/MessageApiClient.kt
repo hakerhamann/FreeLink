@@ -1,6 +1,7 @@
 package com.freelink.core.network.messages
 
 import com.freelink.core.model.domain.Message
+import com.freelink.core.model.domain.MessageEnvelope
 import com.freelink.core.network.auth.AuthApiResult
 
 interface MessageApiClient {
@@ -10,6 +11,7 @@ interface MessageApiClient {
         accessToken: String,
         chatId: String,
         body: String,
+        envelope: MessageEnvelope? = null,
         replyToMessageId: String? = null
     ): AuthApiResult<Message>
 

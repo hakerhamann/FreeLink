@@ -1,6 +1,7 @@
 package com.freelink.core.network.messages
 
 import com.freelink.core.model.domain.Message
+import com.freelink.core.model.domain.MessageEnvelope
 import com.freelink.core.network.auth.AuthApiResult
 import com.freelink.core.network.messages.dto.MessageDto
 import com.freelink.core.network.messages.dto.MessageEnvelopeDto
@@ -21,6 +22,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -66,11 +68,15 @@ class KtorMessageApiClient(
         accessToken: String,
         chatId: String,
         body: String,
+        envelope: MessageEnvelope?,
         replyToMessageId: String?
     ): AuthApiResult<Message> {
-        val payload = buildMap<String, JsonPrimitive> {
+        val payload = buildMap<String, JsonElement> {
             put("chatId", JsonPrimitive(chatId))
             put("body", JsonPrimitive(body))
+            if (envelope != null) {
+                put("envelope", envelope.toJsonObject())
+            }
             if (!replyToMessageId.isNullOrBlank()) {
                 put("replyToMessageId", JsonPrimitive(replyToMessageId))
             }
@@ -183,6 +189,19 @@ class KtorMessageApiClient(
                 if (count > 0) emoji to count else null
             }
             .toMap(linkedMapOf())
+    }
+
+    private fun MessageEnvelope.toJsonObject(): JsonObject {
+        return JsonObject(
+            mapOf(
+                "version" to JsonPrimitive(version),
+                "conversationId" to JsonPrimitive(conversationId),
+                "senderDeviceId" to JsonPrimitive(senderDeviceId),
+                "ciphertext" to JsonPrimitive(ciphertextBase64),
+                "nonce" to JsonPrimitive(nonceBase64),
+                "sentAt" to JsonPrimitive(sentAtIso)
+            )
+        )
     }
 
     companion object {

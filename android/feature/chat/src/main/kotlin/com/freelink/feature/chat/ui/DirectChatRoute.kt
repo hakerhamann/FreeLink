@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.freelink.core.datastore.auth.AuthSessionStore
+import com.freelink.core.encryption.TransportMessageEnvelopeFactory
 import com.freelink.core.network.auth.KtorAuthApiClient
 import com.freelink.core.network.messages.KtorMessageApiClient
 import com.freelink.core.network.messages.ws.KtorDirectChatWsEventsClient
@@ -52,7 +53,8 @@ fun DirectChatRoute(
         DirectChatRepository(
             authRepository = authRepository,
             messageApiClient = KtorMessageApiClient(),
-            directChatWsEventsClient = KtorDirectChatWsEventsClient()
+            directChatWsEventsClient = KtorDirectChatWsEventsClient(),
+            messageEnvelopeFactory = TransportMessageEnvelopeFactory()
         )
     }
     val viewModel: DirectChatViewModel = viewModel(
