@@ -1,12 +1,16 @@
 package com.freelink.feature.chat.ui.mapper
 
+import com.freelink.core.model.domain.AttachmentType
 import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.Message
+import com.freelink.feature.chat.ui.model.DirectMessageAttachmentKindUiModel
 import com.freelink.feature.chat.ui.model.DirectMessageAttachmentUiModel
 import com.freelink.feature.chat.ui.model.DirectMessageUiModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.math.absoluteValue
+import kotlin.math.max
 
 private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -32,13 +36,34 @@ fun Message.toDirectUiModel(
 }
 
 fun MediaAttachment.toUiModel(): DirectMessageAttachmentUiModel {
+    val attachmentKind = type.toUiKind()
     return DirectMessageAttachmentUiModel(
         id = id,
+        kind = attachmentKind,
         typeLabel = type.name.lowercase().replaceFirstChar(Char::uppercase),
         fileName = fileName,
         sizeLabel = formatAttachmentSize(byteSize),
-        downloadUrl = downloadUrl
+        downloadUrl = downloadUrl,
+        durationLabel = if (attachmentKind == DirectMessageAttachmentKindUiModel.VOICE) {
+            formatVoiceDuration(byteSize)
+        } else {
+            null
+        },
+        waveformBars = if (attachmentKind == DirectMessageAttachmentKindUiModel.VOICE) {
+            buildWaveformBars(id = id, digest = digestSha256)
+        } else {
+            emptyList()
+        }
     )
+}
+
+private fun AttachmentType.toUiKind(): DirectMessageAttachmentKindUiModel {
+    return when (this) {
+        AttachmentType.PHOTO -> DirectMessageAttachmentKindUiModel.PHOTO
+        AttachmentType.VIDEO -> DirectMessageAttachmentKindUiModel.VIDEO
+        AttachmentType.VOICE -> DirectMessageAttachmentKindUiModel.VOICE
+        AttachmentType.FILE -> DirectMessageAttachmentKindUiModel.FILE
+    }
 }
 
 private fun formatAttachmentSize(byteSize: Long): String {
@@ -49,4 +74,21 @@ private fun formatAttachmentSize(byteSize: Long): String {
         return String.format("%.1f KB", byteSize / 1024f)
     }
     return "$byteSize B"
+}
+
+private fun formatVoiceDuration(byteSize: Long): String {
+    val totalSeconds = max(3, (byteSize / 512L).toInt())
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%02d:%02d".format(minutes, seconds)
+}
+
+private fun buildWaveformBars(
+    id: String,
+    digest: String
+): List<Int> {
+    val seed = "$id-$digest".hashCode().absoluteValue
+    return List(12) { index ->
+        16 + ((seed shr (index % 8)) + index * 11).absoluteValue % 22
+    }
 }

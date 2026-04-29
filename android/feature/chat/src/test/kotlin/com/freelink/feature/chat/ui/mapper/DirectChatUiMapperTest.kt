@@ -4,7 +4,9 @@ import com.freelink.core.model.domain.AttachmentType
 import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.Message
 import com.freelink.core.model.domain.MessageDeliveryState
+import com.freelink.feature.chat.ui.model.DirectMessageAttachmentKindUiModel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
@@ -39,5 +41,35 @@ class DirectChatUiMapperTest {
         assertEquals("Photo", mapped.attachment?.typeLabel)
         assertEquals("sunset.jpg", mapped.attachment?.fileName)
         assertEquals("https://example.local/sunset.jpg", mapped.attachment?.downloadUrl)
+    }
+
+    @Test
+    fun `voice attachment maps waveform stub metadata`() {
+        val message = Message(
+            id = "message-voice",
+            chatId = "chat-1",
+            senderUserId = "user-1",
+            body = "",
+            createdAtEpochMs = 1_700_000_000_000,
+            deliveryState = MessageDeliveryState.SENT,
+            attachment = MediaAttachment(
+                id = "attachment-voice",
+                type = AttachmentType.VOICE,
+                fileName = "note.m4a",
+                digestSha256 = "digest-voice",
+                byteSize = 8_192,
+                mimeType = "audio/mp4",
+                downloadUrl = "https://example.local/note.m4a"
+            )
+        )
+
+        val mapped = message.toDirectUiModel(
+            currentUserId = "user-1",
+            replyToSnippet = null
+        )
+
+        assertEquals(DirectMessageAttachmentKindUiModel.VOICE, mapped.attachment?.kind)
+        assertEquals("00:16", mapped.attachment?.durationLabel)
+        assertFalse(mapped.attachment?.waveformBars.isNullOrEmpty())
     }
 }
