@@ -38,5 +38,6 @@ class DirectChatUiMapperTest {
         assertNotNull(mapped.attachment)
         assertEquals("Photo", mapped.attachment?.typeLabel)
         assertEquals("sunset.jpg", mapped.attachment?.fileName)
+        assertEquals("https://example.local/sunset.jpg", mapped.attachment?.downloadUrl)
     }
 }
