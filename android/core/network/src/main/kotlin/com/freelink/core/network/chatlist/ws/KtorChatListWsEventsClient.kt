@@ -5,6 +5,9 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.header
+import io.ktor.client.request.url
+import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
@@ -25,7 +28,10 @@ class KtorChatListWsEventsClient(
         accessToken: String,
         onChatUpdated: suspend () -> Unit
     ) {
-        val session = client.webSocketSession("$wsUrl?accessToken=$accessToken")
+        val session = client.webSocketSession {
+            url(wsUrl)
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
 
         for (frame in session.incoming) {
             val textFrame = frame as? Frame.Text ?: continue
