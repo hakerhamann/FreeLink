@@ -3,6 +3,7 @@ package com.freelink.feature.chat.ui
 import com.freelink.feature.chat.ui.model.AttachmentTrayActionUiModel
 
 private const val PHOTO_ACTION_ID = "photo"
+private const val VIDEO_ACTION_ID = "video"
 private const val FILE_ACTION_ID = "file"
 private const val VOICE_ACTION_ID = "voice"
 
@@ -11,6 +12,10 @@ fun defaultAttachmentTrayActions(): List<AttachmentTrayActionUiModel> {
         AttachmentTrayActionUiModel(
             id = PHOTO_ACTION_ID,
             label = "Photo"
+        ),
+        AttachmentTrayActionUiModel(
+            id = VIDEO_ACTION_ID,
+            label = "Video"
         ),
         AttachmentTrayActionUiModel(
             id = FILE_ACTION_ID,
@@ -26,6 +31,7 @@ fun defaultAttachmentTrayActions(): List<AttachmentTrayActionUiModel> {
 fun attachmentTypeForAction(actionId: String): com.freelink.core.model.domain.AttachmentType? {
     return when (actionId) {
         PHOTO_ACTION_ID -> com.freelink.core.model.domain.AttachmentType.PHOTO
+        VIDEO_ACTION_ID -> com.freelink.core.model.domain.AttachmentType.VIDEO
         FILE_ACTION_ID -> com.freelink.core.model.domain.AttachmentType.FILE
         VOICE_ACTION_ID -> com.freelink.core.model.domain.AttachmentType.VOICE
         else -> null

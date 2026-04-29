@@ -10,13 +10,14 @@ class DirectChatPresentationTest {
     fun `defaultAttachmentTrayActions keeps tray order stable`() {
         val actions = defaultAttachmentTrayActions()
 
-        assertEquals(listOf("photo", "file", "voice"), actions.map { it.id })
-        assertEquals(listOf("Photo", "File", "Voice"), actions.map { it.label })
+        assertEquals(listOf("photo", "video", "file", "voice"), actions.map { it.id })
+        assertEquals(listOf("Photo", "Video", "File", "Voice"), actions.map { it.label })
     }
 
     @Test
     fun `attachmentTypeForAction maps supported tray ids`() {
         assertEquals("PHOTO", attachmentTypeForAction("photo")?.name)
+        assertEquals("VIDEO", attachmentTypeForAction("video")?.name)
         assertEquals("FILE", attachmentTypeForAction("file")?.name)
         assertEquals("VOICE", attachmentTypeForAction("voice")?.name)
         assertNull(attachmentTypeForAction("unknown"))
