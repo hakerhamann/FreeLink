@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.settings.data.PrivacySettingsRepository
 import com.freelink.feature.settings.data.PrivacySettingsResult
 import com.freelink.feature.settings.ui.mapper.toDomain
@@ -18,12 +19,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val repository: PrivacySettingsRepository
+    private val repository: PrivacySettingsRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState(isLoading = true))
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
+        observeSession()
         observeLocalSettings()
         refresh()
     }
@@ -104,6 +107,20 @@ class SettingsViewModel(
         }
     }
 
+    private fun observeSession() {
+        viewModelScope.launch {
+            authRepository.sessionFlow.collect { session ->
+                _uiState.update {
+                    it.copy(
+                        userId = session?.userId,
+                        deviceId = session?.deviceId,
+                        isSessionAvailable = session != null
+                    )
+                }
+            }
+        }
+    }
+
     private fun updateSettings(transform: (PrivacySettingsUiModel) -> PrivacySettingsUiModel) {
         val previousSettings = _uiState.value.settings
         val nextSettings = transform(previousSettings)
@@ -135,10 +152,13 @@ class SettingsViewModel(
     }
 
     companion object {
-        fun factory(repository: PrivacySettingsRepository): ViewModelProvider.Factory {
+        fun factory(
+            repository: PrivacySettingsRepository,
+            authRepository: AuthRepository
+        ): ViewModelProvider.Factory {
             return viewModelFactory {
                 initializer {
-                    SettingsViewModel(repository)
+                    SettingsViewModel(repository, authRepository)
                 }
             }
         }
