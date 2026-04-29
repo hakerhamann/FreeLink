@@ -35,7 +35,22 @@ jobs:
         with:
           cache-read-only: false
 
-      - name: Run checks
+      - name: Compile backend services
         run: |
           ./gradlew :backend:apps:api:compileKotlin :backend:apps:ws-gateway:compileKotlin :backend:apps:worker:compileKotlin
+
+      - name: Run backend unit tests
+        run: |
+          ./gradlew :backend:libs:auth:test :backend:libs:chats:test :backend:libs:messaging:test :backend:libs:media:test :backend:libs:privacy:test :backend:libs:observability:test
+
+      - name: Compile Android app
+        run: |
           ./gradlew :android:app:compileDebugKotlin
+
+      - name: Run Android feature tests
+        run: |
+          ./gradlew :android:feature:chat:testDebugUnitTest :android:feature:settings:testDebugUnitTest
+
+      - name: Validate Android manifests
+        run: |
+          ./gradlew :android:app:processDebugManifest :android:app:processReleaseManifest

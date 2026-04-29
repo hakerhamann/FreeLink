@@ -5,10 +5,12 @@ Use this checklist for each release-candidate PR before tagging the MVP.
 ## Build Gates
 
 - `./gradlew :backend:apps:api:compileKotlin :backend:apps:ws-gateway:compileKotlin :backend:apps:worker:compileKotlin`
-- `./gradlew :backend:libs:auth:test :backend:libs:chats:test :backend:libs:messaging:test :backend:libs:media:test :backend:libs:privacy:test`
+- `./gradlew :backend:libs:auth:test :backend:libs:chats:test :backend:libs:messaging:test :backend:libs:media:test :backend:libs:privacy:test :backend:libs:observability:test`
 - `./gradlew :android:app:compileDebugKotlin`
 - `./gradlew :android:feature:chat:testDebugUnitTest :android:feature:settings:testDebugUnitTest`
 - `./gradlew :android:app:processDebugManifest :android:app:processReleaseManifest`
+
+These gates are mirrored in GitHub Actions CI for release-candidate PRs.
 
 ## Manual Scenarios
 
