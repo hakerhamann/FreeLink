@@ -30,9 +30,11 @@ import com.freelink.core.datastore.auth.AuthSessionStore
 import com.freelink.core.network.auth.KtorAuthApiClient
 import com.freelink.core.network.chatlist.KtorChatListApiClient
 import com.freelink.core.network.chatlist.ws.KtorChatListWsEventsClient
+import com.freelink.core.network.people.KtorPeopleApiClient
 import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.chatlist.data.ChatListRepository
 import com.freelink.feature.chatlist.ui.model.ChatListItemUiModel
+import com.freelink.feature.chatlist.ui.model.ChatListPersonUiModel
 
 @Composable
 fun ChatListRoute() {
@@ -49,7 +51,9 @@ fun ChatListRoute() {
             authRepository = authRepository,
             chatListApiClient = KtorChatListApiClient(),
             chatListWsEventsClient = KtorChatListWsEventsClient(),
-            chatSummaryDao = database.chatSummaryDao()
+            chatSummaryDao = database.chatSummaryDao(),
+            peopleApiClient = KtorPeopleApiClient(),
+            personSummaryDao = database.personSummaryDao()
         )
     }
 
@@ -154,6 +158,15 @@ private fun ChatListScreen(
                     ChatListItem(item = item)
                 }
             }
+
+            if (state.peopleMatches.isNotEmpty()) {
+                item {
+                    SectionTitle(title = "People")
+                }
+                items(state.peopleMatches, key = { it.id }) { person ->
+                    PersonSearchItem(item = person)
+                }
+            }
         }
     }
 }
@@ -217,6 +230,40 @@ private fun ChatListItem(item: ChatListItemUiModel) {
             text = item.lastMessagePreview,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1
+        )
+
+        HorizontalDivider()
+    }
+}
+
+@Composable
+private fun PersonSearchItem(item: ChatListPersonUiModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = item.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = item.status,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (item.isOnline) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+            )
+        }
+
+        Text(
+            text = item.login,
+            style = MaterialTheme.typography.bodyMedium
         )
 
         HorizontalDivider()

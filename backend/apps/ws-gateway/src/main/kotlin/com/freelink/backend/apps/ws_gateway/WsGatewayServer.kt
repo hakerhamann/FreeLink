@@ -1,5 +1,6 @@
 package com.freelink.backend.apps.ws_gateway
 
+import io.ktor.http.HttpHeaders
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.install
@@ -27,7 +28,7 @@ fun Application.freeLinkWsGatewayModule() {
         }
 
         webSocket("/ws/chats") {
-            val accessToken = call.request.queryParameters["accessToken"]
+            val accessToken = call.request.headers[HttpHeaders.Authorization].extractBearerTokenForWsGateway()
             if (accessToken.isNullOrBlank()) {
                 return@webSocket
             }
@@ -39,4 +40,13 @@ fun Application.freeLinkWsGatewayModule() {
             }
         }
     }
+}
+
+private fun String?.extractBearerTokenForWsGateway(): String? {
+    if (this == null) {
+        return null
+    }
+
+    val prefix = "Bearer "
+    return if (startsWith(prefix)) substring(prefix.length).trim() else null
 }

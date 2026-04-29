@@ -5,15 +5,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.freelink.core.model.domain.Chat
+import com.freelink.core.model.domain.User
 import com.freelink.feature.chatlist.data.ChatListRepository
 import com.freelink.feature.chatlist.data.ChatListResult
+import com.freelink.feature.chatlist.ui.mapper.toChatListPersonUiModel
 import com.freelink.feature.chatlist.ui.mapper.toUiModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class ChatListViewModel(
@@ -45,19 +48,23 @@ class ChatListViewModel(
     fun refresh() {
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
-            when (val result = repository.syncChats()) {
-                is ChatListResult.Success -> {
-                    _uiState.update { it.copy(isRefreshing = false, errorMessage = null) }
+            val chatSync = repository.syncChats()
+            val peopleSync = repository.syncPeople()
+            val failures = buildList {
+                if (chatSync is ChatListResult.Failure) {
+                    add(chatSync.message)
                 }
-                is ChatListResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isRefreshing = false,
-                            errorMessage = result.message
-                        )
-                    }
+                if (peopleSync is ChatListResult.Failure) {
+                    add(peopleSync.message)
                 }
+            }.distinct()
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isRefreshing = false,
+                    errorMessage = failures.firstOrNull()
+                )
             }
         }
     }
@@ -66,14 +73,16 @@ class ChatListViewModel(
         viewModelScope.launch {
             combine(
                 repository.chatsFlow,
+                repository.peopleFlow,
                 searchQuery,
                 unreadOnly
-            ) { chats, query, unreadFilter ->
-                chats.filter { chat ->
+            ) { chats, people, query, unreadFilter ->
+                val normalizedQuery = query.trim().lowercase()
+
+                val filteredChats = chats.filter { chat ->
                     val matchedQuery = if (query.isBlank()) {
                         true
                     } else {
-                        val normalizedQuery = query.trim().lowercase()
                         chat.title.lowercase().contains(normalizedQuery) ||
                             chat.lastMessagePreview.lowercase().contains(normalizedQuery)
                     }
@@ -86,17 +95,40 @@ class ChatListViewModel(
 
                     matchedQuery && matchedUnread
                 }
-            }.collect { filteredChats ->
-                val mapped = filteredChats.map { it.toUiModel() }
-                val pinned = mapped.filter { it.isPinned }
-                val others = mapped.filterNot { it.isPinned }
+
+                val filteredPeople = if (normalizedQuery.isBlank()) {
+                    emptyList()
+                } else {
+                    people.filter { person ->
+                        person.displayName.lowercase().contains(normalizedQuery) ||
+                            person.login.lowercase().contains(normalizedQuery)
+                    }
+                }
+
+                SearchResult(
+                    chats = filteredChats,
+                    people = filteredPeople,
+                    hasQuery = normalizedQuery.isNotBlank()
+                )
+            }.collect { result ->
+                val mappedChats = result.chats.map { it.toUiModel() }
+                val pinned = mappedChats.filter { it.isPinned }
+                val others = mappedChats.filterNot { it.isPinned }
+                val mappedPeople = result.people.map { it.toChatListPersonUiModel() }
+                val noResults = mappedChats.isEmpty() && mappedPeople.isEmpty()
+                val emptyStateMessage = if (noResults) {
+                    if (result.hasQuery) "No chats or people found" else "No chats found"
+                } else {
+                    null
+                }
 
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         pinnedChats = pinned,
                         otherChats = others,
-                        emptyStateMessage = if (mapped.isEmpty()) "No chats found" else null
+                        peopleMatches = mappedPeople,
+                        emptyStateMessage = emptyStateMessage
                     )
                 }
             }
@@ -124,4 +156,10 @@ class ChatListViewModel(
             }
         }
     }
+
+    private data class SearchResult(
+        val chats: List<Chat>,
+        val people: List<User>,
+        val hasQuery: Boolean
+    )
 }

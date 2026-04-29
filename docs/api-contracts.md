@@ -54,4 +54,5 @@
 - On Android, privacy and device protected requests retry once after `401` via `/auth/refresh`.
 - On Android, chat list now syncs from API to Room (`core:database`) and applies search/unread filtering from local cache.
 - On Android, people list now syncs from API to Room and supports local search by display name/login.
-- WS gateway exposes `/ws/chats` and currently emits `chat.updated` events for client-side chat list resync.
+- On Android chat tab, a single search query now matches both local chats and local people cache.
+- WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.
