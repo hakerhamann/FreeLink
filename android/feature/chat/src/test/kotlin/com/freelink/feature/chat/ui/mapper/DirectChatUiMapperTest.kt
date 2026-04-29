@@ -40,6 +40,7 @@ class DirectChatUiMapperTest {
         assertNotNull(mapped.attachment)
         assertEquals("Photo", mapped.attachment?.typeLabel)
         assertEquals("sunset.jpg", mapped.attachment?.fileName)
+        assertEquals("Photo preview", mapped.attachment?.previewLabel)
         assertEquals("https://example.local/sunset.jpg", mapped.attachment?.downloadUrl)
     }
 
@@ -69,7 +70,38 @@ class DirectChatUiMapperTest {
         )
 
         assertEquals(DirectMessageAttachmentKindUiModel.VOICE, mapped.attachment?.kind)
+        assertEquals("Voice message", mapped.attachment?.previewLabel)
         assertEquals("00:16", mapped.attachment?.durationLabel)
         assertFalse(mapped.attachment?.waveformBars.isNullOrEmpty())
+    }
+
+    @Test
+    fun `file attachment maps file preview label`() {
+        val message = Message(
+            id = "message-file",
+            chatId = "chat-1",
+            senderUserId = "user-1",
+            body = "",
+            createdAtEpochMs = 1_700_000_000_000,
+            deliveryState = MessageDeliveryState.SENT,
+            attachment = MediaAttachment(
+                id = "attachment-file",
+                type = AttachmentType.FILE,
+                fileName = "brief.pdf",
+                digestSha256 = "digest-file",
+                byteSize = 48_512,
+                mimeType = "application/pdf",
+                downloadUrl = "https://example.local/brief.pdf"
+            )
+        )
+
+        val mapped = message.toDirectUiModel(
+            currentUserId = "user-1",
+            replyToSnippet = null
+        )
+
+        assertEquals(DirectMessageAttachmentKindUiModel.FILE, mapped.attachment?.kind)
+        assertEquals("File attachment", mapped.attachment?.previewLabel)
+        assertEquals("47.4 KB", mapped.attachment?.sizeLabel)
     }
 }
