@@ -5,6 +5,7 @@ import com.freelink.backend.libs.messaging.domain.ChatMessage
 import com.freelink.backend.libs.messaging.domain.MessageAttachment
 import com.freelink.backend.libs.messaging.model.EncryptedEnvelope
 import com.freelink.backend.libs.messaging.service.MessagingService
+import com.freelink.backend.libs.privacy.service.PrivacySettingsService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
@@ -31,6 +32,7 @@ data class MessageDto(
     val senderUserId: String,
     val body: String,
     val createdAtEpochMs: Long,
+    val expiresAtEpochMs: Long? = null,
     val deliveryState: String,
     val attachment: MessageAttachmentDto? = null,
     val envelope: EncryptedEnvelopeDto? = null,
@@ -66,7 +68,8 @@ data class SetReactionRequestDto(
 
 fun Route.installMessageRoutes(
     authService: AuthService,
-    messagingService: MessagingService
+    messagingService: MessagingService,
+    privacySettingsService: PrivacySettingsService
 ) {
     get("/messages") {
         val userId = requireAuthorizedUserId(call, authService) ?: return@get
@@ -106,7 +109,8 @@ fun Route.installMessageRoutes(
             body = trimmedBody,
             attachment = request.attachment?.toDomain(),
             envelope = request.envelope?.toDomain(),
-            replyToMessageId = request.replyToMessageId?.trim().takeUnless { it.isNullOrBlank() }
+            replyToMessageId = request.replyToMessageId?.trim().takeUnless { it.isNullOrBlank() },
+            expiresAtEpochMs = privacySettingsService.messageExpiresAtEpochMs(userId)
         )
 
         call.respond(HttpStatusCode.Created, created.toDto())
@@ -167,6 +171,7 @@ private fun ChatMessage.toDto(): MessageDto {
         senderUserId = senderUserId,
         body = body,
         createdAtEpochMs = createdAtEpochMs,
+        expiresAtEpochMs = expiresAtEpochMs,
         deliveryState = deliveryState.name,
         attachment = attachment?.toDto(),
         envelope = envelope?.toDto(),
@@ -220,6 +225,17 @@ private fun EncryptedEnvelope.toDto(): EncryptedEnvelopeDto {
         sentAt = sentAt
     )
 }
+
+private fun PrivacySettingsService.messageExpiresAtEpochMs(userId: String): Long? {
+    val settings = getSettings(userId)
+    return if (settings.disappearingMessagesEnabled) {
+        System.currentTimeMillis() + disappearingMessageTtlMs
+    } else {
+        null
+    }
+}
+
+private const val disappearingMessageTtlMs = 24L * 60L * 60L * 1000L
 
 private fun String?.extractBearerTokenForMessages(): String? {
     if (this == null) {

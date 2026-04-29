@@ -58,6 +58,7 @@
 - `POST /messages` accepts plain `body` and optional encrypted envelope payload for E2EE transport shape.
 - `POST /messages` optionally accepts `replyToMessageId`; `GET /messages` returns `replyToMessageId` and `reactions`.
 - `POST /messages` now also accepts optional `attachment` metadata; attachment-only messages are valid when `body` is blank.
+- When `disappearingMessagesEnabled=true`, `POST /messages` assigns `expiresAtEpochMs` and expired messages are omitted from `GET /messages`.
 - Privacy defaults are server-defined (`hiddenMode=false`, `biometricLock=false`, `linkPreview=true`, `whoCanMessageMe=trusted_contacts`).
 - On Android, protected device requests now retry once after `401` via `/auth/refresh`.
 - On Android, privacy and device protected requests retry once after `401` via `/auth/refresh`.

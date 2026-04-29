@@ -17,7 +17,8 @@ interface MessagingService {
         body: String,
         attachment: MessageAttachment?,
         envelope: EncryptedEnvelope?,
-        replyToMessageId: String?
+        replyToMessageId: String?,
+        expiresAtEpochMs: Long?
     ): ChatMessage
 
     fun setReaction(
