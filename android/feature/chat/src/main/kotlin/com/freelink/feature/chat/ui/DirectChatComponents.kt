@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.freelink.feature.chat.ui.model.AttachmentTrayActionUiModel
 import com.freelink.feature.chat.ui.model.DirectMessageAttachmentUiModel
 import com.freelink.feature.chat.ui.model.DirectMessageUiModel
 import com.freelink.feature.chat.ui.model.ReplyTargetUiModel
@@ -180,9 +181,10 @@ fun ReplyPreview(
 
 @Composable
 fun PendingAttachmentPreview(
+    actions: List<AttachmentTrayActionUiModel>,
     attachment: DirectMessageAttachmentUiModel?,
     isAttaching: Boolean,
-    onAttachSample: () -> Unit,
+    onAttachmentActionSelected: (String) -> Unit,
     onRemoveAttachment: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -190,11 +192,13 @@ fun PendingAttachmentPreview(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            AssistChip(
-                onClick = onAttachSample,
-                enabled = !isAttaching,
-                label = { Text(if (isAttaching) "Attaching..." else "Attach sample") }
-            )
+            actions.forEach { action ->
+                AssistChip(
+                    onClick = { onAttachmentActionSelected(action.id) },
+                    enabled = !isAttaching,
+                    label = { Text(if (isAttaching) "Attaching..." else action.label) }
+                )
+            }
             if (attachment != null) {
                 AssistChip(onClick = onRemoveAttachment, label = { Text("Remove") })
             }

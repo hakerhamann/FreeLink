@@ -57,14 +57,15 @@ class DirectChatViewModel(
         }
     }
 
-    fun attachSampleMedia() {
+    fun onAttachmentActionSelected(actionId: String) {
         if (_uiState.value.isAttaching) {
             return
         }
+        val attachmentType = attachmentTypeForAction(actionId) ?: return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isAttaching = true, errorMessage = null) }
-            when (val result = repository.uploadSampleAttachment(chatId)) {
+            when (val result = repository.uploadSampleAttachment(chatId, attachmentType)) {
                 is DirectChatResult.Success -> {
                     pendingAttachment = result.value
                     _uiState.update {

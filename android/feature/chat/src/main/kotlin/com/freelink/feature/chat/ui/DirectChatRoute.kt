@@ -52,7 +52,7 @@ fun DirectChatRoute(
         onBack = onBack,
         onDraftChanged = viewModel::onDraftChanged,
         onSendMessage = viewModel::sendMessage,
-        onAttachSample = viewModel::attachSampleMedia,
+        onAttachmentActionSelected = viewModel::onAttachmentActionSelected,
         onRemoveAttachment = viewModel::removePendingAttachment,
         onRefresh = viewModel::refresh,
         onReplyRequested = viewModel::onReplyRequested,

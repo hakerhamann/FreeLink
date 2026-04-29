@@ -21,7 +21,7 @@ fun DirectChatScreen(
     onBack: () -> Unit,
     onDraftChanged: (String) -> Unit,
     onSendMessage: () -> Unit,
-    onAttachSample: () -> Unit,
+    onAttachmentActionSelected: (String) -> Unit,
     onRemoveAttachment: () -> Unit,
     onRefresh: () -> Unit,
     onReplyRequested: (String) -> Unit,
@@ -74,9 +74,10 @@ fun DirectChatScreen(
 
         ReplyPreview(replyTarget = state.replyTarget, onCancelReply = onReplyCancelled)
         PendingAttachmentPreview(
+            actions = state.attachmentTrayActions,
             attachment = state.pendingAttachment,
             isAttaching = state.isAttaching,
-            onAttachSample = onAttachSample,
+            onAttachmentActionSelected = onAttachmentActionSelected,
             onRemoveAttachment = onRemoveAttachment
         )
 
