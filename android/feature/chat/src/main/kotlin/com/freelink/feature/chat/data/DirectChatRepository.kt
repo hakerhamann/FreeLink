@@ -2,8 +2,12 @@ package com.freelink.feature.chat.data
 
 import com.freelink.core.model.domain.Message
 import com.freelink.core.network.messages.MessageApiClient
+import com.freelink.core.network.messages.ws.DirectChatWsEvent
+import com.freelink.core.network.messages.ws.DirectChatWsEventsClient
 import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.auth.data.AuthRepositoryResult
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 
 sealed interface DirectChatResult<out T> {
     data class Success<T>(val value: T) : DirectChatResult<T>
@@ -12,7 +16,8 @@ sealed interface DirectChatResult<out T> {
 
 class DirectChatRepository(
     private val authRepository: AuthRepository,
-    private val messageApiClient: MessageApiClient
+    private val messageApiClient: MessageApiClient,
+    private val directChatWsEventsClient: DirectChatWsEventsClient
 ) {
     suspend fun currentUserId(): String? {
         return authRepository.currentUserId()
@@ -69,6 +74,30 @@ class DirectChatRepository(
         ) {
             is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
             is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
+        }
+    }
+
+    suspend fun observeRealtimeEvents(
+        chatId: String,
+        onEvent: suspend (DirectChatWsEvent) -> Unit
+    ) {
+        var reconnectAttempt = 0
+        while (true) {
+            val accessToken = authRepository.currentAccessToken() ?: return
+            try {
+                directChatWsEventsClient.collectEvents(
+                    accessToken = accessToken,
+                    chatId = chatId,
+                    onEvent = onEvent
+                )
+                reconnectAttempt = 0
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                reconnectAttempt += 1
+                val backoffMs = (reconnectAttempt * 1_000L).coerceAtMost(5_000L)
+                delay(backoffMs)
+            }
         }
     }
 }
