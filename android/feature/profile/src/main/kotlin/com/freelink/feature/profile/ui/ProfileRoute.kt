@@ -15,6 +15,7 @@ import com.freelink.feature.auth.data.AuthRepository
 fun ProfileRoute(
     onOpenPrivacySettings: () -> Unit,
     onOpenDevices: () -> Unit,
+    onOpenMediaGallery: () -> Unit,
     onLoggedOut: () -> Unit
 ) {
     val context = LocalContext.current.applicationContext
@@ -40,6 +41,7 @@ fun ProfileRoute(
         state = state,
         onOpenPrivacySettings = onOpenPrivacySettings,
         onOpenDevices = onOpenDevices,
+        onOpenMediaGallery = onOpenMediaGallery,
         onLogout = profileViewModel::logout
     )
 }

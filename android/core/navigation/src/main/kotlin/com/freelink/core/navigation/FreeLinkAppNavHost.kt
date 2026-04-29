@@ -21,6 +21,7 @@ import com.freelink.feature.chat.ui.DirectChatRoute
 import com.freelink.feature.chatlist.ui.ChatListRoute
 import com.freelink.feature.devices.ui.DeviceSessionsRoute
 import com.freelink.feature.group.ui.GroupRoute
+import com.freelink.feature.media_gallery.ui.MediaGalleryRoute
 import com.freelink.feature.people.ui.PeopleRoute
 import com.freelink.feature.profile.ui.ProfileRoute
 import com.freelink.feature.settings.ui.SettingsRoute
@@ -42,6 +43,7 @@ private const val authRoute = "auth"
 private const val directChatRoute = "chat/{chatId}?title={chatTitle}"
 private const val settingsRoute = "settings"
 private const val devicesRoute = "devices"
+private const val mediaGalleryRoute = "media-gallery"
 
 @Composable
 fun FreeLinkAppNavHost() {
@@ -115,6 +117,11 @@ fun FreeLinkAppNavHost() {
                             launchSingleTop = true
                         }
                     },
+                    onOpenMediaGallery = {
+                        navController.navigate(mediaGalleryRoute) {
+                            launchSingleTop = true
+                        }
+                    },
                     onLoggedOut = {
                         navController.navigate(authRoute) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -123,6 +130,11 @@ fun FreeLinkAppNavHost() {
                             launchSingleTop = true
                         }
                     }
+                )
+            }
+            composable(route = mediaGalleryRoute) {
+                MediaGalleryRoute(
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(route = settingsRoute) {

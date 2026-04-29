@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":android:feature:people"))
     implementation(project(":android:feature:group"))
     implementation(project(":android:feature:devices"))
+    implementation(project(":android:feature:media_gallery"))
     implementation(project(":android:feature:profile"))
     implementation(project(":android:feature:settings"))
     testImplementation(libs.junit4)

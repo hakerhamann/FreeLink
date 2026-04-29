@@ -68,6 +68,9 @@
 - `GET /groups/{groupId}` now returns members and role-aware group details for the selected group.
 - On Android `Spaces` tab, group list refresh/search and group creation are now wired to `/groups`.
 - On Android `Spaces` tab, selected groups now show members/roles and can open the shared group chat screen.
+- `POST /media/init` now returns upload session metadata (`uploadId`, `blobKey`, `uploadUrl`, `alreadyExists`) for dedup-aware media flow.
+- `POST /media/complete` now finalizes a session into stored media metadata with a blob download URL.
+- On Android, `Media Gallery` now provides a manual Sprint 5 smoke-flow for `init upload` and `complete upload`, reachable from profile shared photos.
 - On Android direct chat, outgoing messages now show local receipt progression (`sent -> delivered -> read`) and short peer typing indicator UX.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.
 - WS gateway `/ws/messages?chatId=` now requires `Authorization: Bearer <accessToken>` and emits `typing.*`, `message.created`, `receipt.*` events.

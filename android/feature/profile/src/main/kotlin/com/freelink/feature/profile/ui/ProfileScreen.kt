@@ -29,6 +29,7 @@ internal fun ProfileScreen(
     state: ProfileUiState,
     onOpenPrivacySettings: () -> Unit,
     onOpenDevices: () -> Unit,
+    onOpenMediaGallery: () -> Unit,
     onLogout: () -> Unit
 ) {
     Column(
@@ -106,6 +107,13 @@ internal fun ProfileScreen(
                         modifier = Modifier
                     )
                 }
+            }
+            OutlinedButton(
+                onClick = onOpenMediaGallery,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.isLoggingOut
+            ) {
+                Text("Open media gallery")
             }
         }
 
