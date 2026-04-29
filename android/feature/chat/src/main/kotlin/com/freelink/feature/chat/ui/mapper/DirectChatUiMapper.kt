@@ -8,7 +8,10 @@ import java.time.format.DateTimeFormatter
 
 private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-fun Message.toDirectUiModel(currentUserId: String?): DirectMessageUiModel {
+fun Message.toDirectUiModel(
+    currentUserId: String?,
+    replyToSnippet: String?
+): DirectMessageUiModel {
     val timeLabel = Instant.ofEpochMilli(createdAtEpochMs)
         .atZone(ZoneId.systemDefault())
         .toLocalTime()
@@ -19,6 +22,8 @@ fun Message.toDirectUiModel(currentUserId: String?): DirectMessageUiModel {
         text = body,
         isOutgoing = senderUserId == currentUserId,
         timeLabel = timeLabel,
-        deliveryStateLabel = deliveryState.name.lowercase()
+        deliveryStateLabel = deliveryState.name.lowercase(),
+        replyToSnippet = replyToSnippet,
+        reactions = reactions
     )
 }

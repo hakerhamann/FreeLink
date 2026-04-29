@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.freelink.core.model.domain.Message
 import com.freelink.feature.chat.data.DirectChatRepository
 import com.freelink.feature.chat.data.DirectChatResult
 import com.freelink.feature.chat.ui.mapper.toDirectUiModel
+import com.freelink.feature.chat.ui.model.ReplyTargetUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +22,7 @@ class DirectChatViewModel(
     private val repository: DirectChatRepository
 ) : ViewModel() {
     private var currentUserId: String? = null
+    private var latestMessages: List<Message> = emptyList()
 
     private val _uiState = MutableStateFlow(
         DirectChatUiState(
@@ -51,14 +54,62 @@ class DirectChatViewModel(
         if (text.isEmpty()) {
             return
         }
+        val replyTargetId = _uiState.value.replyTarget?.messageId
 
         viewModelScope.launch {
             _uiState.update { it.copy(errorMessage = null) }
-            when (val result = repository.sendMessage(chatId = chatId, body = text)) {
+            when (
+                val result = repository.sendMessage(
+                    chatId = chatId,
+                    body = text,
+                    replyToMessageId = replyTargetId
+                )
+            ) {
                 is DirectChatResult.Success -> {
-                    _uiState.update { it.copy(draft = "") }
+                    _uiState.update { it.copy(draft = "", replyTarget = null) }
                     refreshMessages(isInitial = false)
                 }
+                is DirectChatResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun onReplyRequested(messageId: String) {
+        val target = latestMessages.firstOrNull { it.id == messageId } ?: return
+        val snippet = target.body.trim().take(80)
+        _uiState.update {
+            it.copy(
+                replyTarget = ReplyTargetUiModel(
+                    messageId = target.id,
+                    snippet = snippet
+                )
+            )
+        }
+    }
+
+    fun onReplyCancelled() {
+        _uiState.update { it.copy(replyTarget = null) }
+    }
+
+    fun onReactionRequested(messageId: String, emoji: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(errorMessage = null) }
+            when (
+                val result = repository.setReaction(
+                    chatId = chatId,
+                    messageId = messageId,
+                    emoji = emoji
+                )
+            ) {
+                is DirectChatResult.Success -> refreshMessages(isInitial = false)
                 is DirectChatResult.Failure -> {
                     _uiState.update { state ->
                         state.copy(
@@ -83,15 +134,30 @@ class DirectChatViewModel(
 
         when (val result = repository.loadMessages(chatId)) {
             is DirectChatResult.Success -> {
-                val mapped = result.value
-                    .sortedBy { it.createdAtEpochMs }
-                    .map { it.toDirectUiModel(currentUserId = currentUserId) }
+                val sortedMessages = result.value.sortedBy { it.createdAtEpochMs }
+                latestMessages = sortedMessages
+
+                val bodyById = sortedMessages.associate { it.id to it.body.trim() }
+                val mapped = sortedMessages.map { message ->
+                    val replySnippet = message.replyToMessageId
+                        ?.let(bodyById::get)
+                        ?.take(80)
+                    message.toDirectUiModel(
+                        currentUserId = currentUserId,
+                        replyToSnippet = replySnippet
+                    )
+                }
+
+                val validReplyTarget = _uiState.value.replyTarget?.takeIf { reply ->
+                    sortedMessages.any { it.id == reply.messageId }
+                }
 
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
                         isRefreshing = false,
                         messages = mapped,
+                        replyTarget = validReplyTarget,
                         errorMessage = null
                     )
                 }

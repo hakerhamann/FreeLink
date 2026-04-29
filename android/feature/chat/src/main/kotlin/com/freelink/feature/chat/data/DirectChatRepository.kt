@@ -32,13 +32,38 @@ class DirectChatRepository(
         }
     }
 
-    suspend fun sendMessage(chatId: String, body: String): DirectChatResult<Message> {
+    suspend fun sendMessage(
+        chatId: String,
+        body: String,
+        replyToMessageId: String? = null
+    ): DirectChatResult<Message> {
         return when (
             val result = authRepository.authorizedRequest { session ->
                 messageApiClient.sendMessage(
                     accessToken = session.accessToken,
                     chatId = chatId,
-                    body = body
+                    body = body,
+                    replyToMessageId = replyToMessageId
+                )
+            }
+        ) {
+            is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
+            is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
+        }
+    }
+
+    suspend fun setReaction(
+        chatId: String,
+        messageId: String,
+        emoji: String
+    ): DirectChatResult<Message> {
+        return when (
+            val result = authRepository.authorizedRequest { session ->
+                messageApiClient.setReaction(
+                    accessToken = session.accessToken,
+                    chatId = chatId,
+                    messageId = messageId,
+                    emoji = emoji
                 )
             }
         ) {

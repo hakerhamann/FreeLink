@@ -50,7 +50,9 @@
 - `GET /privacy/settings` and `PUT /privacy/settings` use `Authorization: Bearer <accessToken>`.
 - `GET /chats` uses `Authorization: Bearer <accessToken>` and supports optional `q` and `unreadOnly` query params.
 - `GET /messages?chatId=` and `POST /messages` use `Authorization: Bearer <accessToken>`.
+- `POST /messages/{messageId}/reactions` uses `Authorization: Bearer <accessToken>`.
 - `POST /messages` accepts plain `body` and optional encrypted envelope payload for E2EE transport shape.
+- `POST /messages` optionally accepts `replyToMessageId`; `GET /messages` returns `replyToMessageId` and `reactions`.
 - Privacy defaults are server-defined (`hiddenMode=false`, `biometricLock=false`, `linkPreview=true`, `whoCanMessageMe=trusted_contacts`).
 - On Android, protected device requests now retry once after `401` via `/auth/refresh`.
 - On Android, privacy and device protected requests retry once after `401` via `/auth/refresh`.
@@ -58,4 +60,5 @@
 - On Android, people list now syncs from API to Room and supports local search by display name/login.
 - On Android chat tab, a single search query now matches both local chats and local people cache.
 - On Android direct chat, message history and send action are now backed by `GET/POST /messages` with token refresh fallback.
+- On Android direct chat, message reply and reaction actions are now wired to messages API.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.

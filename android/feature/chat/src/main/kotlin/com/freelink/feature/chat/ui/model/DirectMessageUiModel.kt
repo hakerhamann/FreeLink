@@ -5,5 +5,7 @@ data class DirectMessageUiModel(
     val text: String,
     val isOutgoing: Boolean,
     val timeLabel: String,
-    val deliveryStateLabel: String? = null
+    val deliveryStateLabel: String? = null,
+    val replyToSnippet: String? = null,
+    val reactions: Map<String, Int> = emptyMap()
 )
