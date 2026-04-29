@@ -1,6 +1,8 @@
 package com.freelink.backend.apps.api.routes
 
 import com.freelink.backend.libs.auth.service.AuthService
+import com.freelink.backend.libs.groups.domain.GroupDetails
+import com.freelink.backend.libs.groups.domain.GroupMember
 import com.freelink.backend.libs.groups.domain.GroupSummary
 import com.freelink.backend.libs.groups.service.CreateGroupCommand
 import com.freelink.backend.libs.groups.service.GroupsService
@@ -21,6 +23,19 @@ data class GroupSummaryDto(
     val myRole: String,
     val lastMessagePreview: String,
     val updatedAtEpochMs: Long
+)
+
+@Serializable
+data class GroupMemberDto(
+    val userId: String,
+    val displayName: String,
+    val role: String
+)
+
+@Serializable
+data class GroupDetailsDto(
+    val summary: GroupSummaryDto,
+    val members: List<GroupMemberDto>
 )
 
 @Serializable
@@ -49,6 +64,34 @@ fun Route.installGroupRoutes(
         val query = call.request.queryParameters["q"]
         val groups = groupsService.listGroups(userId, query)
         call.respond(groups.map { it.toDto() })
+    }
+
+    get("/groups/{groupId}") {
+        val accessToken = call.request.headers["Authorization"].extractBearerTokenForGroups()
+        if (accessToken.isNullOrBlank()) {
+            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Authorization bearer token is required."))
+            return@get
+        }
+
+        val userId = authService.resolveUserIdByAccessToken(accessToken)
+        if (userId.isNullOrBlank()) {
+            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Invalid credentials or session state."))
+            return@get
+        }
+
+        val groupId = call.parameters["groupId"]?.trim()
+        if (groupId.isNullOrBlank()) {
+            call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "groupId is required."))
+            return@get
+        }
+
+        val group = groupsService.getGroupDetails(userId, groupId)
+        if (group == null) {
+            call.respond(HttpStatusCode.NotFound, ErrorResponseDto(message = "Group not found."))
+            return@get
+        }
+
+        call.respond(group.toDto())
     }
 
     post("/groups") {
@@ -90,6 +133,21 @@ private fun GroupSummary.toDto(): GroupSummaryDto {
         myRole = myRole.name,
         lastMessagePreview = lastMessagePreview,
         updatedAtEpochMs = updatedAtEpochMs
+    )
+}
+
+private fun GroupDetails.toDto(): GroupDetailsDto {
+    return GroupDetailsDto(
+        summary = summary.toDto(),
+        members = members.map { it.toDto() }
+    )
+}
+
+private fun GroupMember.toDto(): GroupMemberDto {
+    return GroupMemberDto(
+        userId = userId,
+        displayName = displayName,
+        role = role.name
     )
 }
 

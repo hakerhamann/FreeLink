@@ -1,5 +1,6 @@
 package com.freelink.feature.group.data
 
+import com.freelink.core.model.domain.GroupDetails
 import com.freelink.core.model.domain.GroupSummary
 import com.freelink.core.network.groups.GroupApiClient
 import com.freelink.feature.auth.data.AuthRepository
@@ -20,6 +21,20 @@ class GroupRepository(
                 groupApiClient.fetchGroups(
                     accessToken = session.accessToken,
                     query = query
+                )
+            }
+        ) {
+            is AuthRepositoryResult.Success -> GroupResult.Success(result.value)
+            is AuthRepositoryResult.Failure -> GroupResult.Failure(result.message)
+        }
+    }
+
+    suspend fun loadGroupDetails(groupId: String): GroupResult<GroupDetails> {
+        return when (
+            val result = authRepository.authorizedRequest { session ->
+                groupApiClient.fetchGroupDetails(
+                    accessToken = session.accessToken,
+                    groupId = groupId
                 )
             }
         ) {

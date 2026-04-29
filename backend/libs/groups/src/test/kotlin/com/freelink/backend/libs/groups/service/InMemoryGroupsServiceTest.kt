@@ -32,4 +32,19 @@ class InMemoryGroupsServiceTest {
         assertEquals(3, created.membersCount)
         assertEquals("OWNER", created.myRole.name)
     }
+
+    @Test
+    fun `getGroupDetails returns members for seeded user`() {
+        val service = InMemoryGroupsService()
+
+        val listed = service.listGroups(userId = "user-test", query = null)
+        val details = service.getGroupDetails(
+            userId = "user-test",
+            groupId = listed.first().id
+        )
+
+        assertTrue(details != null)
+        assertTrue(details!!.members.isNotEmpty())
+        assertEquals("You", details.members.first().displayName)
+    }
 }

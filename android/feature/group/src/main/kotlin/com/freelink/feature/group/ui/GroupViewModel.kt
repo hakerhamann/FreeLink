@@ -50,6 +50,7 @@ class GroupViewModel(
                 is GroupResult.Success -> {
                     _uiState.update { it.copy(isCreating = false, createDraft = "") }
                     refresh(isInitial = false)
+                    selectGroup(result.value.id)
                 }
                 is GroupResult.Failure -> {
                     _uiState.update {
@@ -57,6 +58,36 @@ class GroupViewModel(
                             isCreating = false,
                             isLoading = false,
                             isRefreshing = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun selectGroup(groupId: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoadingDetails = true,
+                    errorMessage = null
+                )
+            }
+
+            when (val result = repository.loadGroupDetails(groupId)) {
+                is GroupResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoadingDetails = false,
+                            selectedGroup = result.value.toUiModel()
+                        )
+                    }
+                }
+                is GroupResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoadingDetails = false,
                             errorMessage = result.message
                         )
                     }
@@ -78,13 +109,19 @@ class GroupViewModel(
             when (val result = repository.loadGroups(_uiState.value.query)) {
                 is GroupResult.Success -> {
                     val mapped = result.value.map { it.toUiModel() }
+                    val preservedSelection = _uiState.value.selectedGroup
+                        ?.takeIf { selected -> mapped.any { it.id == selected.groupId } }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
                             groups = mapped,
+                            selectedGroup = preservedSelection,
                             emptyStateMessage = if (mapped.isEmpty()) "No groups found." else null
                         )
+                    }
+                    if (preservedSelection == null && mapped.isNotEmpty()) {
+                        selectGroup(mapped.first().id)
                     }
                 }
                 is GroupResult.Failure -> {

@@ -1,7 +1,10 @@
 package com.freelink.core.network.groups
 
+import com.freelink.core.model.domain.GroupDetails
 import com.freelink.core.model.domain.GroupSummary
 import com.freelink.core.network.auth.AuthApiResult
+import com.freelink.core.network.groups.dto.GroupDetailsDto
+import com.freelink.core.network.groups.dto.GroupMemberDto
 import com.freelink.core.network.groups.dto.GroupDto
 import com.freelink.core.network.groups.mapper.toDomain
 import io.ktor.client.HttpClient
@@ -56,6 +59,28 @@ class KtorGroupApiClient(
         return AuthApiResult.Success(groups)
     }
 
+    override suspend fun fetchGroupDetails(accessToken: String, groupId: String): AuthApiResult<GroupDetails> {
+        val response = client.get("$baseUrl/groups/$groupId") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+
+        if (!response.status.isSuccess()) {
+            return AuthApiResult.Failure(
+                message = "Failed to fetch group details",
+                statusCode = response.status.value
+            )
+        }
+
+        val bodyText = response.body<String>()
+        val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toGroupDetailsDto()
+            ?: return AuthApiResult.Failure(
+                message = "Malformed group details payload",
+                statusCode = response.status.value
+            )
+
+        return AuthApiResult.Success(dto.toDomain())
+    }
+
     override suspend fun createGroup(
         accessToken: String,
         title: String,
@@ -98,6 +123,25 @@ class KtorGroupApiClient(
             myRole = stringOrEmpty("myRole"),
             lastMessagePreview = stringOrEmpty("lastMessagePreview"),
             updatedAtEpochMs = longOrZero("updatedAtEpochMs")
+        )
+    }
+
+    private fun JsonObject.toGroupDetailsDto(): GroupDetailsDto {
+        val summaryObject = this["summary"] as? JsonObject ?: return GroupDetailsDto(
+            summary = GroupDto("", "", 0, "", "", 0L),
+            members = emptyList()
+        )
+        val membersArray = this["members"] as? JsonArray ?: JsonArray(emptyList())
+        return GroupDetailsDto(
+            summary = summaryObject.toGroupDto(),
+            members = membersArray.mapNotNull { item ->
+                val obj = item as? JsonObject ?: return@mapNotNull null
+                GroupMemberDto(
+                    userId = obj.stringOrEmpty("userId"),
+                    displayName = obj.stringOrEmpty("displayName"),
+                    role = obj.stringOrEmpty("role")
+                )
+            }
         )
     }
 
