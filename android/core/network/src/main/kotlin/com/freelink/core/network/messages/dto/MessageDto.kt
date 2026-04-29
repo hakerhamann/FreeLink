@@ -25,6 +25,7 @@ data class MessageDto(
     val senderUserId: String,
     val body: String,
     val createdAtEpochMs: Long,
+    val expiresAtEpochMs: Long?,
     val deliveryState: String,
     val attachment: MessageAttachmentDto?,
     val envelope: MessageEnvelopeDto?,

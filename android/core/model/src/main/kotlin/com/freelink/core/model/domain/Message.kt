@@ -21,6 +21,7 @@ data class Message(
     val senderUserId: String,
     val body: String,
     val createdAtEpochMs: Long,
+    val expiresAtEpochMs: Long? = null,
     val deliveryState: MessageDeliveryState,
     val attachment: MediaAttachment? = null,
     val envelope: MessageEnvelope? = null,

@@ -14,6 +14,7 @@ fun MessageDto.toDomain(): Message {
         senderUserId = senderUserId,
         body = body,
         createdAtEpochMs = createdAtEpochMs,
+        expiresAtEpochMs = expiresAtEpochMs,
         deliveryState = MessageDeliveryState.entries.firstOrNull { it.name == deliveryState }
             ?: MessageDeliveryState.SENT,
         attachment = attachment?.let {

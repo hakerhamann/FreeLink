@@ -153,6 +153,7 @@ class KtorMessageApiClient(
             senderUserId = stringOrEmpty("senderUserId"),
             body = stringOrEmpty("body"),
             createdAtEpochMs = longOrZero("createdAtEpochMs"),
+            expiresAtEpochMs = longOrNull("expiresAtEpochMs"),
             deliveryState = stringOrEmpty("deliveryState"),
             attachment = attachmentOrNull("attachment"),
             envelope = envelopeOrNull("envelope"),
@@ -174,6 +175,11 @@ class KtorMessageApiClient(
     private fun JsonObject.longOrZero(key: String): Long {
         val value = this[key] as? JsonPrimitive
         return value?.content?.toLongOrNull() ?: 0L
+    }
+
+    private fun JsonObject.longOrNull(key: String): Long? {
+        val value = this[key] as? JsonPrimitive ?: return null
+        return value.content.toLongOrNull()
     }
 
     private fun JsonObject.attachmentOrNull(key: String): MessageAttachmentDto? {

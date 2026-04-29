@@ -7,6 +7,7 @@ data class DirectMessageUiModel(
     val timeLabel: String,
     val attachment: DirectMessageAttachmentUiModel? = null,
     val deliveryStateLabel: String? = null,
+    val expiresAtLabel: String? = null,
     val replyToSnippet: String? = null,
     val reactions: Map<String, Int> = emptyMap()
 )

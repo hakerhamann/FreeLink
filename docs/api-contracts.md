@@ -59,6 +59,7 @@
 - `POST /messages` optionally accepts `replyToMessageId`; `GET /messages` returns `replyToMessageId` and `reactions`.
 - `POST /messages` now also accepts optional `attachment` metadata; attachment-only messages are valid when `body` is blank.
 - When `disappearingMessagesEnabled=true`, `POST /messages` assigns `expiresAtEpochMs` and expired messages are omitted from `GET /messages`.
+- On Android direct chat, `expiresAtEpochMs` is parsed into domain/UI state and shown as a compact expiry label in message bubbles.
 - Privacy defaults are server-defined (`hiddenMode=false`, `biometricLock=false`, `linkPreview=true`, `whoCanMessageMe=trusted_contacts`).
 - On Android, protected device requests now retry once after `401` via `/auth/refresh`.
 - On Android, privacy and device protected requests retry once after `401` via `/auth/refresh`.
