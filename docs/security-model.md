@@ -22,4 +22,5 @@ This document captures authentication, key management, and threat controls.
 - Hidden mode covers notification redaction and recent-app preview protection.
 - Android app backup and device-transfer extraction are explicitly disabled for protected local data.
 - Release cleartext traffic is disabled; debug keeps local HTTP access for emulator development only.
+- Backend logging must use the observability safe logger/redactor for tokens, passwords and secrets.
 - No secret logging, analytics leakage, or clipboard leakage.

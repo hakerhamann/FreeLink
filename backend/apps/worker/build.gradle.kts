@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":backend:libs:media"))
     implementation(project(":backend:libs:updates"))
     implementation(project(":backend:libs:notifications"))
+    implementation(project(":backend:libs:observability"))
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.logback.classic)
