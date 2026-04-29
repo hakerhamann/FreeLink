@@ -114,6 +114,14 @@ private fun DirectChatScreen(
 
         HorizontalDivider()
 
+        if (state.isPeerTyping) {
+            Text(
+                text = "Peer is typing...",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
         if (state.isLoading) {
             CircularProgressIndicator()
         }
