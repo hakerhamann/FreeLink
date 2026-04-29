@@ -24,6 +24,10 @@ class AuthRepository(
         return sessionStore.sessionFlow.first()?.accessToken
     }
 
+    suspend fun currentUserId(): String? {
+        return sessionStore.sessionFlow.first()?.userId
+    }
+
     suspend fun register(login: String, password: String): AuthRepositoryResult<AuthSession> {
         return when (
             val result = apiClient.register(
