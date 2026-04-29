@@ -63,3 +63,5 @@
 - On Android direct chat, message reply and reaction actions are now wired to messages API.
 - On Android direct chat, outgoing messages now show local receipt progression (`sent -> delivered -> read`) and short peer typing indicator UX.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.
+- WS gateway `/ws/messages?chatId=` now requires `Authorization: Bearer <accessToken>` and emits `typing.*`, `message.created`, `receipt.*` events.
+- On Android direct chat, realtime `typing/message/receipt` updates are now consumed from WS events.

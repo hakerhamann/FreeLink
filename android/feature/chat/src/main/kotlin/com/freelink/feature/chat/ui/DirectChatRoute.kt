@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.freelink.core.datastore.auth.AuthSessionStore
 import com.freelink.core.network.auth.KtorAuthApiClient
 import com.freelink.core.network.messages.KtorMessageApiClient
+import com.freelink.core.network.messages.ws.KtorDirectChatWsEventsClient
 import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.chat.data.DirectChatRepository
 import com.freelink.feature.chat.ui.model.DirectMessageUiModel
@@ -50,7 +51,8 @@ fun DirectChatRoute(
     val repository = remember {
         DirectChatRepository(
             authRepository = authRepository,
-            messageApiClient = KtorMessageApiClient()
+            messageApiClient = KtorMessageApiClient(),
+            directChatWsEventsClient = KtorDirectChatWsEventsClient()
         )
     }
     val viewModel: DirectChatViewModel = viewModel(

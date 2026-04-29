@@ -6,12 +6,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.freelink.core.model.domain.Message
+import com.freelink.core.network.messages.ws.DirectChatWsEvent
 import com.freelink.feature.chat.data.DirectChatRepository
 import com.freelink.feature.chat.data.DirectChatResult
 import com.freelink.feature.chat.ui.mapper.toDirectUiModel
 import com.freelink.feature.chat.ui.model.ReplyTargetUiModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,8 +26,7 @@ class DirectChatViewModel(
     private var currentUserId: String? = null
     private var latestMessages: List<Message> = emptyList()
     private val deliveryOverrides = LinkedHashMap<String, String>()
-    private val deliveryJobs = LinkedHashMap<String, Job>()
-    private var typingJob: Job? = null
+    private var wsJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         DirectChatUiState(
@@ -42,6 +41,7 @@ class DirectChatViewModel(
             currentUserId = repository.currentUserId()
             refreshMessages(isInitial = true)
         }
+        startRealtimeSync()
     }
 
     fun onDraftChanged(value: String) {
@@ -73,8 +73,6 @@ class DirectChatViewModel(
                 is DirectChatResult.Success -> {
                     _uiState.update { it.copy(draft = "", replyTarget = null) }
                     refreshMessages(isInitial = false)
-                    scheduleDeliveryProgression(result.value.id)
-                    schedulePeerTypingIndicator()
                 }
                 is DirectChatResult.Failure -> {
                     _uiState.update { state ->
@@ -87,6 +85,33 @@ class DirectChatViewModel(
                 }
             }
         }
+    }
+
+    private fun startRealtimeSync() {
+        wsJob?.cancel()
+        wsJob = viewModelScope.launch {
+            repository.observeRealtimeEvents(chatId) { event ->
+                handleRemoteEvent(event)
+            }
+        }
+    }
+
+    private suspend fun handleRemoteEvent(event: DirectChatWsEvent) {
+        when (event) {
+            is DirectChatWsEvent.MessageCreated -> refreshMessages(isInitial = false)
+            is DirectChatWsEvent.TypingStarted -> _uiState.update { it.copy(isPeerTyping = true) }
+            is DirectChatWsEvent.TypingStopped -> _uiState.update { it.copy(isPeerTyping = false) }
+            is DirectChatWsEvent.ReceiptDelivered -> applyRemoteReceipt(event.messageId, "delivered")
+            is DirectChatWsEvent.ReceiptRead -> applyRemoteReceipt(event.messageId, "read")
+        }
+    }
+
+    private fun applyRemoteReceipt(messageId: String?, deliveryState: String) {
+        val targetId = messageId
+            ?: latestMessages.lastOrNull { it.senderUserId == currentUserId }?.id
+            ?: return
+        deliveryOverrides[targetId] = deliveryState
+        applyLocalDeliveryOverrides()
     }
 
     fun onReplyRequested(messageId: String) {
@@ -184,28 +209,6 @@ class DirectChatViewModel(
         }
     }
 
-    private fun scheduleDeliveryProgression(messageId: String) {
-        deliveryJobs.remove(messageId)?.cancel()
-        deliveryJobs[messageId] = viewModelScope.launch {
-            delay(1_500)
-            deliveryOverrides[messageId] = "delivered"
-            applyLocalDeliveryOverrides()
-
-            delay(1_800)
-            deliveryOverrides[messageId] = "read"
-            applyLocalDeliveryOverrides()
-        }
-    }
-
-    private fun schedulePeerTypingIndicator() {
-        typingJob?.cancel()
-        typingJob = viewModelScope.launch {
-            _uiState.update { it.copy(isPeerTyping = true) }
-            delay(1_300)
-            _uiState.update { it.copy(isPeerTyping = false) }
-        }
-    }
-
     private fun applyLocalDeliveryOverrides() {
         _uiState.update { state ->
             state.copy(
@@ -218,9 +221,7 @@ class DirectChatViewModel(
     }
 
     override fun onCleared() {
-        typingJob?.cancel()
-        deliveryJobs.values.forEach { it.cancel() }
-        deliveryJobs.clear()
+        wsJob?.cancel()
         super.onCleared()
     }
 

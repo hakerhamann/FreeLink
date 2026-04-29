@@ -39,6 +39,41 @@ fun Application.freeLinkWsGatewayModule() {
                 delay(15_000)
             }
         }
+
+        webSocket("/ws/messages") {
+            val accessToken = call.request.headers[HttpHeaders.Authorization].extractBearerTokenForWsGateway()
+            val chatId = call.request.queryParameters["chatId"]?.trim().orEmpty()
+            if (accessToken.isNullOrBlank() || chatId.isBlank()) {
+                return@webSocket
+            }
+
+            var sequence = 0
+            while (true) {
+                delay(4_000)
+                outgoing.send(Frame.Text(buildWsPayload(type = "typing.started", chatId = chatId)))
+                delay(1_200)
+                outgoing.send(Frame.Text(buildWsPayload(type = "typing.stopped", chatId = chatId)))
+
+                val createdMessageId = "$chatId-ws-$sequence-${System.currentTimeMillis()}"
+                outgoing.send(
+                    Frame.Text(
+                        buildWsPayload(
+                            type = "message.created",
+                            chatId = chatId,
+                            messageId = createdMessageId
+                        )
+                    )
+                )
+
+                delay(800)
+                outgoing.send(Frame.Text(buildWsPayload(type = "receipt.delivered", chatId = chatId)))
+                delay(800)
+                outgoing.send(Frame.Text(buildWsPayload(type = "receipt.read", chatId = chatId)))
+
+                sequence += 1
+                delay(12_000)
+            }
+        }
     }
 }
 
@@ -49,4 +84,13 @@ private fun String?.extractBearerTokenForWsGateway(): String? {
 
     val prefix = "Bearer "
     return if (startsWith(prefix)) substring(prefix.length).trim() else null
+}
+
+private fun buildWsPayload(
+    type: String,
+    chatId: String,
+    messageId: String? = null
+): String {
+    val messagePart = if (messageId == null) "" else ",\"messageId\":\"$messageId\""
+    return """{"type":"$type","chatId":"$chatId"$messagePart,"sentAtEpochMs":${System.currentTimeMillis()}}"""
 }
