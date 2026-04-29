@@ -1,6 +1,7 @@
 package com.freelink.feature.chat.data
 
 import com.freelink.core.model.domain.Message
+import com.freelink.core.encryption.MessageEnvelopeFactory
 import com.freelink.core.network.messages.MessageApiClient
 import com.freelink.core.network.messages.ws.DirectChatWsEvent
 import com.freelink.core.network.messages.ws.DirectChatWsEventsClient
@@ -17,7 +18,8 @@ sealed interface DirectChatResult<out T> {
 class DirectChatRepository(
     private val authRepository: AuthRepository,
     private val messageApiClient: MessageApiClient,
-    private val directChatWsEventsClient: DirectChatWsEventsClient
+    private val directChatWsEventsClient: DirectChatWsEventsClient,
+    private val messageEnvelopeFactory: MessageEnvelopeFactory
 ) {
     suspend fun currentUserId(): String? {
         return authRepository.currentUserId()
@@ -44,10 +46,16 @@ class DirectChatRepository(
     ): DirectChatResult<Message> {
         return when (
             val result = authRepository.authorizedRequest { session ->
+                val envelope = messageEnvelopeFactory.create(
+                    conversationId = chatId,
+                    senderDeviceId = session.deviceId,
+                    plaintextBody = body
+                )
                 messageApiClient.sendMessage(
                     accessToken = session.accessToken,
                     chatId = chatId,
                     body = body,
+                    envelope = envelope,
                     replyToMessageId = replyToMessageId
                 )
             }

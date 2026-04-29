@@ -60,6 +60,7 @@
 - On Android, people list now syncs from API to Room and supports local search by display name/login.
 - On Android chat tab, a single search query now matches both local chats and local people cache.
 - On Android direct chat, message history and send action are now backed by `GET/POST /messages` with token refresh fallback.
+- On Android direct chat, outgoing `POST /messages` now attaches a client-generated envelope (`version=1`, metadata + transport ciphertext shape).
 - On Android direct chat, message reply and reaction actions are now wired to messages API.
 - On Android direct chat, outgoing messages now show local receipt progression (`sent -> delivered -> read`) and short peer typing indicator UX.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.

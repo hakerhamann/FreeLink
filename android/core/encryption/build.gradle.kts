@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":android:core:model"))
     testImplementation(libs.junit4)
 }
 
