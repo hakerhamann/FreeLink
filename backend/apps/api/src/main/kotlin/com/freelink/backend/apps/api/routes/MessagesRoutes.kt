@@ -1,6 +1,7 @@
 package com.freelink.backend.apps.api.routes
 
 import com.freelink.backend.libs.auth.service.AuthService
+import com.freelink.backend.libs.chats.service.ChatsService
 import com.freelink.backend.libs.messaging.domain.ChatMessage
 import com.freelink.backend.libs.messaging.domain.MessageAttachment
 import com.freelink.backend.libs.messaging.model.EncryptedEnvelope
@@ -69,7 +70,8 @@ data class SetReactionRequestDto(
 fun Route.installMessageRoutes(
     authService: AuthService,
     messagingService: MessagingService,
-    privacySettingsService: PrivacySettingsService
+    privacySettingsService: PrivacySettingsService,
+    chatsService: ChatsService
 ) {
     get("/messages") {
         val userId = requireAuthorizedUserId(call, authService) ?: return@get
@@ -77,6 +79,10 @@ fun Route.installMessageRoutes(
         val chatId = call.request.queryParameters["chatId"]?.trim()
         if (chatId.isNullOrBlank()) {
             call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "chatId query parameter is required."))
+            return@get
+        }
+        if (!canUseChat(userId, chatId, chatsService, privacySettingsService)) {
+            call.respond(HttpStatusCode.Forbidden, ErrorResponseDto(message = trustedChatPolicyError))
             return@get
         }
 
@@ -102,10 +108,15 @@ fun Route.installMessageRoutes(
             call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "Invalid message payload."))
             return@post
         }
+        val chatId = request.chatId.trim()
+        if (!canUseChat(userId, chatId, chatsService, privacySettingsService)) {
+            call.respond(HttpStatusCode.Forbidden, ErrorResponseDto(message = trustedChatPolicyError))
+            return@post
+        }
 
         val created = messagingService.sendMessage(
             userId = userId,
-            chatId = request.chatId.trim(),
+            chatId = chatId,
             body = trimmedBody,
             attachment = request.attachment?.toDomain(),
             envelope = request.envelope?.toDomain(),
@@ -126,14 +137,19 @@ fun Route.installMessageRoutes(
 
         val request = call.receive<SetReactionRequestDto>()
         val emoji = request.emoji.trim()
-        if (request.chatId.isBlank() || emoji.length !in 1..16) {
+        val chatId = request.chatId.trim()
+        if (chatId.isBlank() || emoji.length !in 1..16) {
             call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "Invalid reaction payload."))
+            return@post
+        }
+        if (!canUseChat(userId, chatId, chatsService, privacySettingsService)) {
+            call.respond(HttpStatusCode.Forbidden, ErrorResponseDto(message = trustedChatPolicyError))
             return@post
         }
 
         val updated = messagingService.setReaction(
             userId = userId,
-            chatId = request.chatId.trim(),
+            chatId = chatId,
             messageId = messageId,
             emoji = emoji
         )
@@ -145,6 +161,18 @@ fun Route.installMessageRoutes(
         call.respond(HttpStatusCode.OK, updated.toDto())
     }
 }
+
+private fun canUseChat(
+    userId: String,
+    chatId: String,
+    chatsService: ChatsService,
+    privacySettingsService: PrivacySettingsService
+): Boolean {
+    val settings = privacySettingsService.getSettings(userId)
+    return settings.whoCanMessageMe == "everyone" || chatsService.isKnownChat(userId, chatId)
+}
+
+private const val trustedChatPolicyError = "Chat is outside trusted messaging policy."
 
 private suspend fun requireAuthorizedUserId(
     call: io.ktor.server.application.ApplicationCall,

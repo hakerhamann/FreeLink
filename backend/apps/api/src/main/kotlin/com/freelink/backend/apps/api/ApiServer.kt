@@ -54,7 +54,7 @@ fun Application.freeLinkApiModule() {
         installChatRoutes(authService, chatsService)
         installGroupRoutes(authService, groupsService)
         installMediaRoutes(authService, mediaService)
-        installMessageRoutes(authService, messagingService, privacySettingsService)
+        installMessageRoutes(authService, messagingService, privacySettingsService, chatsService)
         installPeopleRoutes(authService, peopleService)
         installPrivacyRoutes(authService, privacySettingsService)
     }

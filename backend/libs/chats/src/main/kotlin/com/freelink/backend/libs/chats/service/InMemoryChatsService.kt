@@ -31,6 +31,12 @@ class InMemoryChatsService : ChatsService {
             .toList()
     }
 
+    override fun isKnownChat(userId: String, chatId: String): Boolean {
+        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
+        val normalizedChatId = chatId.trim()
+        return source.any { it.id == normalizedChatId }
+    }
+
     override fun archiveChat(userId: String, chatId: String): Boolean {
         val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
         val normalizedChatId = chatId.trim()

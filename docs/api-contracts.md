@@ -89,6 +89,7 @@
 - On Android direct chat, voice attachments now render with a waveform stub and derived duration label for MVP playback UX.
 - On Android direct chat, photo/video/file attachments now render type-specific preview states before opening the media URL.
 - On Android direct chat, outgoing messages now show local receipt progression (`sent -> delivered -> read`) and short peer typing indicator UX.
+- Backend message routes enforce `whoCanMessageMe=trusted_contacts` by allowing message reads, sends and reactions only for known chats.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.
 - WS gateway `/ws/messages?chatId=` now requires `Authorization: Bearer <accessToken>` and emits `typing.*`, `message.created`, `receipt.*` events.
 - On Android direct chat, realtime `typing/message/receipt` updates are now consumed from WS events.

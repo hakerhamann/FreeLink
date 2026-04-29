@@ -1,6 +1,7 @@
 package com.freelink.backend.libs.chats.service
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -53,6 +54,14 @@ class InMemoryChatsServiceTest {
         )
 
         assertTrue(chats.none { it.id == "chat-lera" })
+    }
+
+    @Test
+    fun isKnownChatMatchesSeededTrustedSurface() {
+        val service = InMemoryChatsService()
+
+        assertTrue(service.isKnownChat(userId = "user-1", chatId = "chat-lera"))
+        assertFalse(service.isKnownChat(userId = "user-1", chatId = "chat-unknown"))
     }
 
     @Test
