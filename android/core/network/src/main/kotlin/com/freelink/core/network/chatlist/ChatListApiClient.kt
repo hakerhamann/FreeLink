@@ -12,4 +12,9 @@ interface ChatListApiClient {
         accessToken: String,
         chatId: String
     ): AuthApiResult<Unit>
+
+    suspend fun restoreArchivedChat(
+        accessToken: String,
+        chatId: String
+    ): AuthApiResult<Unit>
 }

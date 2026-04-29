@@ -25,16 +25,34 @@ class ArchiveViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, restoringChatId = null, errorMessage = null) }
             when (val result = repository.loadArchivedChats()) {
                 is ArchiveResult.Success -> {
                     _uiState.update {
-                        it.copy(isLoading = false, chats = result.value, errorMessage = null)
+                        it.copy(
+                            isLoading = false,
+                            chats = result.value,
+                            errorMessage = null
+                        )
                     }
                 }
                 is ArchiveResult.Failure -> {
                     _uiState.update {
                         it.copy(isLoading = false, errorMessage = result.message)
+                    }
+                }
+            }
+        }
+    }
+
+    fun restoreChat(chatId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(restoringChatId = chatId, errorMessage = null) }
+            when (val result = repository.restoreArchivedChat(chatId)) {
+                is ArchiveResult.Success -> refresh()
+                is ArchiveResult.Failure -> {
+                    _uiState.update {
+                        it.copy(restoringChatId = null, errorMessage = result.message)
                     }
                 }
             }

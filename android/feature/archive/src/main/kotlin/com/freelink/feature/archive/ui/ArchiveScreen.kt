@@ -23,7 +23,8 @@ import com.freelink.core.model.domain.Chat
 internal fun ArchiveScreen(
     state: ArchiveUiState,
     onBack: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onRestoreChat: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -59,7 +60,11 @@ internal fun ArchiveScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(state.chats, key = { it.id }) { chat ->
-                ArchivedChatCard(chat)
+                ArchivedChatCard(
+                    chat = chat,
+                    isRestoring = state.restoringChatId == chat.id,
+                    onRestoreChat = onRestoreChat
+                )
             }
         }
 
@@ -81,7 +86,11 @@ internal fun ArchiveScreen(
 }
 
 @Composable
-private fun ArchivedChatCard(chat: Chat) {
+private fun ArchivedChatCard(
+    chat: Chat,
+    isRestoring: Boolean,
+    onRestoreChat: (String) -> Unit
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -92,6 +101,11 @@ private fun ArchivedChatCard(chat: Chat) {
                 text = chat.lastMessagePreview,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline
+            )
+            AssistChip(
+                onClick = { onRestoreChat(chat.id) },
+                enabled = !isRestoring,
+                label = { Text(if (isRestoring) "Restoring..." else "Restore") }
             )
         }
     }
