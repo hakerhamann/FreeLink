@@ -12,8 +12,8 @@
 4. Sprint 3: direct chat core
 5. Sprint 4: groups and profile
 6. Sprint 5: media pipeline
-7. Sprint 6: privacy and archive
-8. Sprint 7: stabilization and release
+7. Sprint 6: privacy and archive (completed)
+8. Sprint 7: stabilization and release (in progress)
 
 ## Change protocol
 - Each stage is merged as focused, reviewable PRs.

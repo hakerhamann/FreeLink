@@ -25,3 +25,8 @@ This document captures branching, semantic versioning, and GitHub release workfl
 
 - Semantic version tags (`vX.Y.Z`).
 - GitHub Releases as changelog history source.
+
+## MVP runbooks
+
+- Use `docs/mvp-release-runbook.md` for the go/no-go checklist, staging smoke order, rollback, and release notes.
+- Use `docs/sprint7-stabilization-checklist.md` for release-candidate PR validation.
