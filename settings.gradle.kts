@@ -58,12 +58,15 @@ include(
     ":backend:libs:config",
     ":backend:libs:db",
     ":backend:libs:auth",
+    ":backend:libs:chats",
+    ":backend:libs:people",
     ":backend:libs:crypto",
     ":backend:libs:messaging",
     ":backend:libs:groups",
     ":backend:libs:media",
     ":backend:libs:calls",
     ":backend:libs:updates",
+    ":backend:libs:privacy",
     ":backend:libs:notifications",
     ":backend:libs:observability"
 )

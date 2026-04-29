@@ -1,0 +1,99 @@
+package com.freelink.core.network.chatlist
+
+import com.freelink.core.model.domain.Chat
+import com.freelink.core.network.auth.AuthApiResult
+import com.freelink.core.network.chatlist.dto.ChatSummaryDto
+import com.freelink.core.network.chatlist.mapper.toDomain
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+
+class KtorChatListApiClient(
+    private val baseUrl: String = "http://10.0.2.2:8080"
+) : ChatListApiClient {
+    private val client: HttpClient = defaultClient()
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+
+    override suspend fun fetchChats(accessToken: String): AuthApiResult<List<Chat>> {
+        val response = client.get("$baseUrl/chats") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+
+        if (!response.status.isSuccess()) {
+            return AuthApiResult.Failure(
+                message = "Failed to fetch chats",
+                statusCode = response.status.value
+            )
+        }
+
+        val bodyText = response.body<String>()
+        val items = json.parseToJsonElement(bodyText) as? JsonArray ?: JsonArray(emptyList())
+        val chats = items.mapNotNull { item ->
+            val obj = item as? JsonObject ?: return@mapNotNull null
+            ChatSummaryDto(
+                id = obj.stringOrEmpty("id"),
+                title = obj.stringOrEmpty("title"),
+                lastMessagePreview = obj.stringOrEmpty("lastMessagePreview"),
+                type = obj.stringOrEmpty("type"),
+                unreadCount = obj.intOrZero("unreadCount"),
+                isPinned = obj.booleanOrFalse("isPinned"),
+                updatedAtEpochMs = obj.longOrZero("updatedAtEpochMs")
+            )
+        }.map { it.toDomain() }
+
+        return AuthApiResult.Success(chats)
+    }
+
+    private fun HttpStatusCode.isSuccess(): Boolean {
+        return value in 200..299
+    }
+
+    private fun JsonObject.stringOrEmpty(key: String): String {
+        val value = this[key] as? JsonPrimitive
+        return value?.content ?: ""
+    }
+
+    private fun JsonObject.intOrZero(key: String): Int {
+        val value = this[key] as? JsonPrimitive
+        return value?.content?.toIntOrNull() ?: 0
+    }
+
+    private fun JsonObject.longOrZero(key: String): Long {
+        val value = this[key] as? JsonPrimitive
+        return value?.content?.toLongOrNull() ?: 0L
+    }
+
+    private fun JsonObject.booleanOrFalse(key: String): Boolean {
+        val value = this[key] as? JsonPrimitive
+        return value?.content?.toBooleanStrictOrNull() ?: false
+    }
+
+    companion object {
+        private fun defaultClient(): HttpClient {
+            return HttpClient(CIO) {
+                install(ContentNegotiation) {
+                    json()
+                }
+                expectSuccess = false
+                defaultRequest {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                }
+            }
+        }
+    }
+}

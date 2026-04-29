@@ -10,18 +10,22 @@ navigation = "2.8.2"
 hilt = "2.52"
 room = "2.6.1"
 datastore = "1.1.1"
+biometric = "1.1.0"
 coroutines = "1.8.1"
-serialization = "1.7.2"
+serialization = "1.6.3"
 ktor = "2.3.12"
 logback = "1.5.8"
 postgres = "42.7.4"
 minio = "8.5.12"
 lettuce = "6.3.2.RELEASE"
 junit4 = "4.13.2"
+argon2 = "2.12"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -38,6 +42,7 @@ room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
@@ -61,6 +66,7 @@ postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 minio = { module = "io.minio:minio", version.ref = "minio" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+argon2-jvm = { module = "de.mkammerer:argon2-jvm", version.ref = "argon2" }
 
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 

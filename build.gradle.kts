@@ -1,5 +1,6 @@
 plugins {
     base
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 allprojects {

@@ -1,6 +1,7 @@
 plugins {
     application
     id("freelink.kotlin.jvm")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 application {
@@ -12,10 +13,13 @@ dependencies {
     implementation(project(":backend:libs:config"))
     implementation(project(":backend:libs:db"))
     implementation(project(":backend:libs:auth"))
+    implementation(project(":backend:libs:chats"))
+    implementation(project(":backend:libs:people"))
     implementation(project(":backend:libs:crypto"))
     implementation(project(":backend:libs:messaging"))
     implementation(project(":backend:libs:groups"))
     implementation(project(":backend:libs:media"))
+    implementation(project(":backend:libs:privacy"))
     implementation(project(":backend:libs:notifications"))
     implementation(project(":backend:libs:observability"))
 

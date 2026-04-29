@@ -8,6 +8,7 @@ enum class ChatType {
 data class Chat(
     val id: String,
     val title: String,
+    val lastMessagePreview: String,
     val type: ChatType,
     val unreadCount: Int,
     val isPinned: Boolean,
