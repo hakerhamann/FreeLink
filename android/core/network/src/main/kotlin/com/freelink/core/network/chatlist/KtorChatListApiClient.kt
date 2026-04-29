@@ -42,22 +42,22 @@ class KtorChatListApiClient(
             )
         }
 
-        val bodyText = response.body<String>()
-        val items = json.parseToJsonElement(bodyText) as? JsonArray ?: JsonArray(emptyList())
-        val chats = items.mapNotNull { item ->
-            val obj = item as? JsonObject ?: return@mapNotNull null
-            ChatSummaryDto(
-                id = obj.stringOrEmpty("id"),
-                title = obj.stringOrEmpty("title"),
-                lastMessagePreview = obj.stringOrEmpty("lastMessagePreview"),
-                type = obj.stringOrEmpty("type"),
-                unreadCount = obj.intOrZero("unreadCount"),
-                isPinned = obj.booleanOrFalse("isPinned"),
-                updatedAtEpochMs = obj.longOrZero("updatedAtEpochMs")
-            )
-        }.map { it.toDomain() }
+        return AuthApiResult.Success(parseChatSummaries(response.body()))
+    }
 
-        return AuthApiResult.Success(chats)
+    override suspend fun fetchArchivedChats(accessToken: String): AuthApiResult<List<Chat>> {
+        val response = client.get("$baseUrl/archive") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+
+        if (!response.status.isSuccess()) {
+            return AuthApiResult.Failure(
+                message = "Failed to fetch archived chats",
+                statusCode = response.status.value
+            )
+        }
+
+        return AuthApiResult.Success(parseChatSummaries(response.body()))
     }
 
     override suspend fun archiveChat(
@@ -80,6 +80,22 @@ class KtorChatListApiClient(
 
     private fun HttpStatusCode.isSuccess(): Boolean {
         return value in 200..299
+    }
+
+    private fun parseChatSummaries(bodyText: String): List<Chat> {
+        val items = json.parseToJsonElement(bodyText) as? JsonArray ?: JsonArray(emptyList())
+        return items.mapNotNull { item ->
+            val obj = item as? JsonObject ?: return@mapNotNull null
+            ChatSummaryDto(
+                id = obj.stringOrEmpty("id"),
+                title = obj.stringOrEmpty("title"),
+                lastMessagePreview = obj.stringOrEmpty("lastMessagePreview"),
+                type = obj.stringOrEmpty("type"),
+                unreadCount = obj.intOrZero("unreadCount"),
+                isPinned = obj.booleanOrFalse("isPinned"),
+                updatedAtEpochMs = obj.longOrZero("updatedAtEpochMs")
+            )
+        }.map { it.toDomain() }
     }
 
     private fun JsonObject.stringOrEmpty(key: String): String {

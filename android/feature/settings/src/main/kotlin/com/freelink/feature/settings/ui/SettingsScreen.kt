@@ -37,6 +37,7 @@ internal fun SettingsScreen(
     onLinkPreviewChanged: (Boolean) -> Unit,
     onWhoCanMessageChanged: (WhoCanMessageUiOption) -> Unit,
     onOpenDevices: () -> Unit,
+    onOpenArchive: () -> Unit,
     onLogout: () -> Unit
 ) {
     val controlsEnabled = !state.isLoading && !state.isSaving && !state.isLoggingOut
@@ -169,8 +170,9 @@ internal fun SettingsScreen(
             SettingsActionRow(
                 title = "Archive",
                 subtitle = "Archived chats and protected history access",
-                trailing = "Sprint 6",
-                enabled = false
+                trailing = "Open",
+                enabled = controlsEnabled,
+                onClick = onOpenArchive
             )
             SettingsActionRow(
                 title = "Media library",

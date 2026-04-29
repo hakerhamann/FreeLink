@@ -17,6 +17,7 @@ import com.freelink.feature.settings.data.PrivacySettingsRepository
 @Composable
 fun SettingsRoute(
     onOpenDevices: () -> Unit,
+    onOpenArchive: () -> Unit,
     onLoggedOut: () -> Unit
 ) {
     val context = LocalContext.current.applicationContext
@@ -58,6 +59,7 @@ fun SettingsRoute(
         onLinkPreviewChanged = settingsViewModel::onLinkPreviewChanged,
         onWhoCanMessageChanged = settingsViewModel::onWhoCanMessageChanged,
         onOpenDevices = onOpenDevices,
+        onOpenArchive = onOpenArchive,
         onLogout = settingsViewModel::logout
     )
 }
