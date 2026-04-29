@@ -9,6 +9,7 @@ import com.freelink.feature.chat.ui.model.DirectMessageUiModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
@@ -44,6 +45,7 @@ fun MediaAttachment.toUiModel(): DirectMessageAttachmentUiModel {
         fileName = fileName,
         sizeLabel = formatAttachmentSize(byteSize),
         downloadUrl = downloadUrl,
+        previewLabel = previewLabelFor(attachmentKind),
         durationLabel = if (attachmentKind == DirectMessageAttachmentKindUiModel.VOICE) {
             formatVoiceDuration(byteSize)
         } else {
@@ -57,6 +59,15 @@ fun MediaAttachment.toUiModel(): DirectMessageAttachmentUiModel {
     )
 }
 
+private fun previewLabelFor(kind: DirectMessageAttachmentKindUiModel): String {
+    return when (kind) {
+        DirectMessageAttachmentKindUiModel.PHOTO -> "Photo preview"
+        DirectMessageAttachmentKindUiModel.VIDEO -> "Video preview"
+        DirectMessageAttachmentKindUiModel.VOICE -> "Voice message"
+        DirectMessageAttachmentKindUiModel.FILE -> "File attachment"
+    }
+}
+
 private fun AttachmentType.toUiKind(): DirectMessageAttachmentKindUiModel {
     return when (this) {
         AttachmentType.PHOTO -> DirectMessageAttachmentKindUiModel.PHOTO
@@ -68,10 +79,10 @@ private fun AttachmentType.toUiKind(): DirectMessageAttachmentKindUiModel {
 
 private fun formatAttachmentSize(byteSize: Long): String {
     if (byteSize >= 1_048_576) {
-        return String.format("%.1f MB", byteSize / 1_048_576f)
+        return String.format(Locale.US, "%.1f MB", byteSize / 1_048_576f)
     }
     if (byteSize >= 1024) {
-        return String.format("%.1f KB", byteSize / 1024f)
+        return String.format(Locale.US, "%.1f KB", byteSize / 1024f)
     }
     return "$byteSize B"
 }

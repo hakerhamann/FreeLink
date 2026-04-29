@@ -14,6 +14,7 @@ data class DirectMessageAttachmentUiModel(
     val fileName: String,
     val sizeLabel: String,
     val downloadUrl: String,
+    val previewLabel: String,
     val durationLabel: String? = null,
     val waveformBars: List<Int> = emptyList()
 )
