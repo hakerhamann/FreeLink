@@ -1,5 +1,15 @@
 package com.freelink.core.network.messages.dto
 
+data class MessageAttachmentDto(
+    val id: String,
+    val type: String,
+    val fileName: String,
+    val digestSha256: String,
+    val byteSize: Long,
+    val mimeType: String,
+    val downloadUrl: String
+)
+
 data class MessageEnvelopeDto(
     val version: Int,
     val conversationId: String,
@@ -16,6 +26,7 @@ data class MessageDto(
     val body: String,
     val createdAtEpochMs: Long,
     val deliveryState: String,
+    val attachment: MessageAttachmentDto?,
     val envelope: MessageEnvelopeDto?,
     val replyToMessageId: String?,
     val reactions: Map<String, Int>

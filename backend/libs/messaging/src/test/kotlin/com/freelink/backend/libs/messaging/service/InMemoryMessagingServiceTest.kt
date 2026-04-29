@@ -1,6 +1,7 @@
 package com.freelink.backend.libs.messaging.service
 
 import com.freelink.backend.libs.messaging.domain.MessageDeliveryState
+import com.freelink.backend.libs.messaging.domain.MessageAttachment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -16,6 +17,15 @@ class InMemoryMessagingServiceTest {
             userId = "user-1",
             chatId = "chat-lera",
             body = "test message",
+            attachment = MessageAttachment(
+                id = "media-1",
+                type = "PHOTO",
+                fileName = "test.jpg",
+                digestSha256 = "digest-1",
+                byteSize = 1024,
+                mimeType = "image/jpeg",
+                downloadUrl = "https://example.local/test.jpg"
+            ),
             envelope = null,
             replyToMessageId = replyTargetId
         )
@@ -26,6 +36,7 @@ class InMemoryMessagingServiceTest {
         assertEquals(created.id, after.last().id)
         assertEquals(MessageDeliveryState.SENT, after.last().deliveryState)
         assertEquals(replyTargetId, after.last().replyToMessageId)
+        assertEquals("test.jpg", after.last().attachment?.fileName)
     }
 
     @Test
@@ -36,6 +47,7 @@ class InMemoryMessagingServiceTest {
             userId = "user-1",
             chatId = "chat-artem",
             body = "one",
+            attachment = null,
             envelope = null,
             replyToMessageId = null
         )
@@ -43,6 +55,7 @@ class InMemoryMessagingServiceTest {
             userId = "user-1",
             chatId = "chat-artem",
             body = "two",
+            attachment = null,
             envelope = null,
             replyToMessageId = null
         )

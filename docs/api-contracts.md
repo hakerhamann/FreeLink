@@ -55,6 +55,7 @@
 - `POST /messages/{messageId}/reactions` uses `Authorization: Bearer <accessToken>`.
 - `POST /messages` accepts plain `body` and optional encrypted envelope payload for E2EE transport shape.
 - `POST /messages` optionally accepts `replyToMessageId`; `GET /messages` returns `replyToMessageId` and `reactions`.
+- `POST /messages` now also accepts optional `attachment` metadata; attachment-only messages are valid when `body` is blank.
 - Privacy defaults are server-defined (`hiddenMode=false`, `biometricLock=false`, `linkPreview=true`, `whoCanMessageMe=trusted_contacts`).
 - On Android, protected device requests now retry once after `401` via `/auth/refresh`.
 - On Android, privacy and device protected requests retry once after `401` via `/auth/refresh`.
@@ -71,6 +72,7 @@
 - `POST /media/init` now returns upload session metadata (`uploadId`, `blobKey`, `uploadUrl`, `alreadyExists`) for dedup-aware media flow.
 - `POST /media/complete` now finalizes a session into stored media metadata with a blob download URL.
 - On Android, `Media Gallery` now provides a manual Sprint 5 smoke-flow for `init upload` and `complete upload`, reachable from profile shared photos.
+- On Android direct chat, `Attach sample` now runs media `init/complete`, keeps pending attachment state in composer, and renders attachment cards inside message bubbles.
 - On Android direct chat, outgoing messages now show local receipt progression (`sent -> delivered -> read`) and short peer typing indicator UX.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.
 - WS gateway `/ws/messages?chatId=` now requires `Authorization: Bearer <accessToken>` and emits `typing.*`, `message.created`, `receipt.*` events.

@@ -22,6 +22,7 @@ data class Message(
     val body: String,
     val createdAtEpochMs: Long,
     val deliveryState: MessageDeliveryState,
+    val attachment: MediaAttachment? = null,
     val envelope: MessageEnvelope? = null,
     val replyToMessageId: String? = null,
     val reactions: Map<String, Int> = emptyMap()

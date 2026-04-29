@@ -1,6 +1,7 @@
 package com.freelink.backend.libs.messaging.service
 
 import com.freelink.backend.libs.messaging.domain.ChatMessage
+import com.freelink.backend.libs.messaging.domain.MessageAttachment
 import com.freelink.backend.libs.messaging.domain.MessageDeliveryState
 import com.freelink.backend.libs.messaging.model.EncryptedEnvelope
 import java.util.Collections
@@ -26,6 +27,7 @@ class InMemoryMessagingService : MessagingService {
         userId: String,
         chatId: String,
         body: String,
+        attachment: MessageAttachment?,
         envelope: EncryptedEnvelope?,
         replyToMessageId: String?
     ): ChatMessage {
@@ -41,6 +43,7 @@ class InMemoryMessagingService : MessagingService {
             body = body,
             createdAtEpochMs = System.currentTimeMillis(),
             deliveryState = MessageDeliveryState.SENT,
+            attachment = attachment,
             envelope = envelope,
             replyToMessageId = replyId
         )
@@ -93,7 +96,16 @@ class InMemoryMessagingService : MessagingService {
             senderUserId = "peer",
             body = "Hey, are you online?",
             createdAtEpochMs = now - 120_000,
-            deliveryState = MessageDeliveryState.READ
+            deliveryState = MessageDeliveryState.READ,
+            attachment = MessageAttachment(
+                id = "$chatId-photo-1",
+                type = "PHOTO",
+                fileName = "lake.jpg",
+                digestSha256 = "seed-digest-1",
+                byteSize = 2048,
+                mimeType = "image/jpeg",
+                downloadUrl = "https://staging.freelink.local/blob/media/$chatId/lake.jpg"
+            )
         )
         val second = ChatMessage(
             id = "$chatId-seed-2",

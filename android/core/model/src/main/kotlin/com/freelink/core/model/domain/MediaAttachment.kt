@@ -10,7 +10,9 @@ enum class AttachmentType {
 data class MediaAttachment(
     val id: String,
     val type: AttachmentType,
+    val fileName: String,
     val digestSha256: String,
     val byteSize: Long,
-    val mimeType: String
+    val mimeType: String,
+    val downloadUrl: String
 )

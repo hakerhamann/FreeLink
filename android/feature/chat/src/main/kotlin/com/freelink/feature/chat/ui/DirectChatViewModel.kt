@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.Message
 import com.freelink.core.network.messages.ws.DirectChatWsEvent
 import com.freelink.feature.chat.data.DirectChatRepository
 import com.freelink.feature.chat.data.DirectChatResult
 import com.freelink.feature.chat.ui.mapper.toDirectUiModel
+import com.freelink.feature.chat.ui.mapper.toUiModel
 import com.freelink.feature.chat.ui.model.ReplyTargetUiModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,7 @@ class DirectChatViewModel(
 ) : ViewModel() {
     private var currentUserId: String? = null
     private var latestMessages: List<Message> = emptyList()
+    private var pendingAttachment: MediaAttachment? = null
     private val deliveryOverrides = LinkedHashMap<String, String>()
     private var wsJob: Job? = null
 
@@ -54,9 +57,44 @@ class DirectChatViewModel(
         }
     }
 
+    fun attachSampleMedia() {
+        if (_uiState.value.isAttaching) {
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAttaching = true, errorMessage = null) }
+            when (val result = repository.uploadSampleAttachment(chatId)) {
+                is DirectChatResult.Success -> {
+                    pendingAttachment = result.value
+                    _uiState.update {
+                        it.copy(
+                            isAttaching = false,
+                            pendingAttachment = result.value.toUiModel()
+                        )
+                    }
+                }
+                is DirectChatResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isAttaching = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun removePendingAttachment() {
+        pendingAttachment = null
+        _uiState.update { it.copy(pendingAttachment = null, isAttaching = false) }
+    }
+
     fun sendMessage() {
         val text = _uiState.value.draft.trim()
-        if (text.isEmpty()) {
+        val attachment = pendingAttachment
+        if (text.isEmpty() && attachment == null) {
             return
         }
         val replyTargetId = _uiState.value.replyTarget?.messageId
@@ -67,11 +105,19 @@ class DirectChatViewModel(
                 val result = repository.sendMessage(
                     chatId = chatId,
                     body = text,
+                    attachment = attachment,
                     replyToMessageId = replyTargetId
                 )
             ) {
                 is DirectChatResult.Success -> {
-                    _uiState.update { it.copy(draft = "", replyTarget = null) }
+                    pendingAttachment = null
+                    _uiState.update {
+                        it.copy(
+                            draft = "",
+                            pendingAttachment = null,
+                            replyTarget = null
+                        )
+                    }
                     refreshMessages(isInitial = false)
                 }
                 is DirectChatResult.Failure -> {
@@ -116,7 +162,7 @@ class DirectChatViewModel(
 
     fun onReplyRequested(messageId: String) {
         val target = latestMessages.firstOrNull { it.id == messageId } ?: return
-        val snippet = target.body.trim().take(80)
+        val snippet = target.body.trim().ifBlank { target.attachment?.fileName.orEmpty() }.take(80)
         _uiState.update {
             it.copy(
                 replyTarget = ReplyTargetUiModel(

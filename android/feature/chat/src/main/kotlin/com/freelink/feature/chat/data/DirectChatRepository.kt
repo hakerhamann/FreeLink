@@ -1,7 +1,11 @@
 package com.freelink.feature.chat.data
 
+import com.freelink.core.model.domain.AttachmentType
+import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.Message
 import com.freelink.core.encryption.MessageEnvelopeFactory
+import com.freelink.core.network.media.MediaApiClient
+import com.freelink.core.network.media.mapper.toAttachment
 import com.freelink.core.network.messages.MessageApiClient
 import com.freelink.core.network.messages.ws.DirectChatWsEvent
 import com.freelink.core.network.messages.ws.DirectChatWsEventsClient
@@ -17,6 +21,7 @@ sealed interface DirectChatResult<out T> {
 
 class DirectChatRepository(
     private val authRepository: AuthRepository,
+    private val mediaApiClient: MediaApiClient,
     private val messageApiClient: MessageApiClient,
     private val directChatWsEventsClient: DirectChatWsEventsClient,
     private val messageEnvelopeFactory: MessageEnvelopeFactory
@@ -42,6 +47,7 @@ class DirectChatRepository(
     suspend fun sendMessage(
         chatId: String,
         body: String,
+        attachment: MediaAttachment? = null,
         replyToMessageId: String? = null
     ): DirectChatResult<Message> {
         return when (
@@ -55,12 +61,42 @@ class DirectChatRepository(
                     accessToken = session.accessToken,
                     chatId = chatId,
                     body = body,
+                    attachment = attachment,
                     envelope = envelope,
                     replyToMessageId = replyToMessageId
                 )
             }
         ) {
             is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
+            is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
+        }
+    }
+
+    suspend fun uploadSampleAttachment(chatId: String): DirectChatResult<MediaAttachment> {
+        return when (
+            val result = authRepository.authorizedRequest { session ->
+                val digest = "chat-$chatId-${System.currentTimeMillis()}"
+                val init = mediaApiClient.initUpload(
+                    accessToken = session.accessToken,
+                    fileName = "sample-$chatId.jpg",
+                    mimeType = "image/jpeg",
+                    digestSha256 = digest,
+                    byteSize = 2048,
+                    attachmentType = AttachmentType.PHOTO
+                )
+                when (init) {
+                    is com.freelink.core.network.auth.AuthApiResult.Failure -> init
+                    is com.freelink.core.network.auth.AuthApiResult.Success -> {
+                        val uploadId = init.value.uploadId
+                        mediaApiClient.completeUpload(
+                            accessToken = session.accessToken,
+                            uploadId = uploadId
+                        )
+                    }
+                }
+            }
+        ) {
+            is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value.toAttachment())
             is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
         }
     }

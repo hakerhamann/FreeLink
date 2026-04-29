@@ -1,6 +1,7 @@
 package com.freelink.core.network.media.mapper
 
 import com.freelink.core.model.domain.AttachmentType
+import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.MediaUploadSession
 import com.freelink.core.model.domain.UploadedMedia
 import com.freelink.core.network.media.dto.MediaUploadSessionDto
@@ -25,6 +26,18 @@ fun UploadedMediaDto.toDomain(): UploadedMedia {
         fileName = fileName,
         attachmentType = AttachmentType.entries.firstOrNull { it.name == attachmentType } ?: AttachmentType.FILE,
         blobKey = blobKey,
+        downloadUrl = downloadUrl
+    )
+}
+
+fun UploadedMedia.toAttachment(): MediaAttachment {
+    return MediaAttachment(
+        id = attachmentId,
+        type = attachmentType,
+        fileName = fileName,
+        digestSha256 = digestSha256,
+        byteSize = byteSize,
+        mimeType = mimeType,
         downloadUrl = downloadUrl
     )
 }

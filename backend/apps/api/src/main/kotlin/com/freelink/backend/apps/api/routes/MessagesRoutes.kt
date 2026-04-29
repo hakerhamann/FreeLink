@@ -2,6 +2,7 @@ package com.freelink.backend.apps.api.routes
 
 import com.freelink.backend.libs.auth.service.AuthService
 import com.freelink.backend.libs.messaging.domain.ChatMessage
+import com.freelink.backend.libs.messaging.domain.MessageAttachment
 import com.freelink.backend.libs.messaging.model.EncryptedEnvelope
 import com.freelink.backend.libs.messaging.service.MessagingService
 import io.ktor.http.HttpStatusCode
@@ -31,15 +32,28 @@ data class MessageDto(
     val body: String,
     val createdAtEpochMs: Long,
     val deliveryState: String,
+    val attachment: MessageAttachmentDto? = null,
     val envelope: EncryptedEnvelopeDto? = null,
     val replyToMessageId: String? = null,
     val reactions: Map<String, Int> = emptyMap()
 )
 
 @Serializable
+data class MessageAttachmentDto(
+    val id: String,
+    val type: String,
+    val fileName: String,
+    val digestSha256: String,
+    val byteSize: Long,
+    val mimeType: String,
+    val downloadUrl: String
+)
+
+@Serializable
 data class SendMessageRequestDto(
     val chatId: String,
     val body: String,
+    val attachment: MessageAttachmentDto? = null,
     val envelope: EncryptedEnvelopeDto? = null,
     val replyToMessageId: String? = null
 )
@@ -77,7 +91,11 @@ fun Route.installMessageRoutes(
         val userId = requireAuthorizedUserId(call, authService) ?: return@post
 
         val request = call.receive<SendMessageRequestDto>()
-        if (request.chatId.isBlank() || request.body.trim().length !in 1..4000) {
+        val trimmedBody = request.body.trim()
+        val hasBody = trimmedBody.isNotBlank()
+        val hasAttachment = request.attachment != null
+        val bodyLengthValid = trimmedBody.length <= 4000
+        if (request.chatId.isBlank() || !bodyLengthValid || (!hasBody && !hasAttachment)) {
             call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "Invalid message payload."))
             return@post
         }
@@ -85,7 +103,8 @@ fun Route.installMessageRoutes(
         val created = messagingService.sendMessage(
             userId = userId,
             chatId = request.chatId.trim(),
-            body = request.body.trim(),
+            body = trimmedBody,
+            attachment = request.attachment?.toDomain(),
             envelope = request.envelope?.toDomain(),
             replyToMessageId = request.replyToMessageId?.trim().takeUnless { it.isNullOrBlank() }
         )
@@ -149,9 +168,34 @@ private fun ChatMessage.toDto(): MessageDto {
         body = body,
         createdAtEpochMs = createdAtEpochMs,
         deliveryState = deliveryState.name,
+        attachment = attachment?.toDto(),
         envelope = envelope?.toDto(),
         replyToMessageId = replyToMessageId,
         reactions = reactions
+    )
+}
+
+private fun MessageAttachmentDto.toDomain(): MessageAttachment {
+    return MessageAttachment(
+        id = id,
+        type = type,
+        fileName = fileName,
+        digestSha256 = digestSha256,
+        byteSize = byteSize,
+        mimeType = mimeType,
+        downloadUrl = downloadUrl
+    )
+}
+
+private fun MessageAttachment.toDto(): MessageAttachmentDto {
+    return MessageAttachmentDto(
+        id = id,
+        type = type,
+        fileName = fileName,
+        digestSha256 = digestSha256,
+        byteSize = byteSize,
+        mimeType = mimeType,
+        downloadUrl = downloadUrl
     )
 }
 

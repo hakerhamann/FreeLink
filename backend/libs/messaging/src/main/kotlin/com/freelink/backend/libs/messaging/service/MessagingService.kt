@@ -1,6 +1,7 @@
 package com.freelink.backend.libs.messaging.service
 
 import com.freelink.backend.libs.messaging.domain.ChatMessage
+import com.freelink.backend.libs.messaging.domain.MessageAttachment
 import com.freelink.backend.libs.messaging.model.EncryptedEnvelope
 
 interface MessagingService {
@@ -14,6 +15,7 @@ interface MessagingService {
         userId: String,
         chatId: String,
         body: String,
+        attachment: MessageAttachment?,
         envelope: EncryptedEnvelope?,
         replyToMessageId: String?
     ): ChatMessage

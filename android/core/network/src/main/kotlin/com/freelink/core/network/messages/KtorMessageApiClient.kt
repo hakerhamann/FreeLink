@@ -1,8 +1,10 @@
 package com.freelink.core.network.messages
 
+import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.Message
 import com.freelink.core.model.domain.MessageEnvelope
 import com.freelink.core.network.auth.AuthApiResult
+import com.freelink.core.network.messages.dto.MessageAttachmentDto
 import com.freelink.core.network.messages.dto.MessageDto
 import com.freelink.core.network.messages.dto.MessageEnvelopeDto
 import com.freelink.core.network.messages.mapper.toDomain
@@ -68,12 +70,16 @@ class KtorMessageApiClient(
         accessToken: String,
         chatId: String,
         body: String,
+        attachment: MediaAttachment?,
         envelope: MessageEnvelope?,
         replyToMessageId: String?
     ): AuthApiResult<Message> {
         val payload = buildMap<String, JsonElement> {
             put("chatId", JsonPrimitive(chatId))
             put("body", JsonPrimitive(body))
+            if (attachment != null) {
+                put("attachment", attachment.toJsonObject())
+            }
             if (envelope != null) {
                 put("envelope", envelope.toJsonObject())
             }
@@ -148,6 +154,7 @@ class KtorMessageApiClient(
             body = stringOrEmpty("body"),
             createdAtEpochMs = longOrZero("createdAtEpochMs"),
             deliveryState = stringOrEmpty("deliveryState"),
+            attachment = attachmentOrNull("attachment"),
             envelope = envelopeOrNull("envelope"),
             replyToMessageId = stringOrNull("replyToMessageId"),
             reactions = intMapOrEmpty("reactions")
@@ -167,6 +174,19 @@ class KtorMessageApiClient(
     private fun JsonObject.longOrZero(key: String): Long {
         val value = this[key] as? JsonPrimitive
         return value?.content?.toLongOrNull() ?: 0L
+    }
+
+    private fun JsonObject.attachmentOrNull(key: String): MessageAttachmentDto? {
+        val value = this[key] as? JsonObject ?: return null
+        return MessageAttachmentDto(
+            id = value.stringOrEmpty("id"),
+            type = value.stringOrEmpty("type"),
+            fileName = value.stringOrEmpty("fileName"),
+            digestSha256 = value.stringOrEmpty("digestSha256"),
+            byteSize = value.longOrZero("byteSize"),
+            mimeType = value.stringOrEmpty("mimeType"),
+            downloadUrl = value.stringOrEmpty("downloadUrl")
+        )
     }
 
     private fun JsonObject.envelopeOrNull(key: String): MessageEnvelopeDto? {
@@ -200,6 +220,20 @@ class KtorMessageApiClient(
                 "ciphertext" to JsonPrimitive(ciphertextBase64),
                 "nonce" to JsonPrimitive(nonceBase64),
                 "sentAt" to JsonPrimitive(sentAtIso)
+            )
+        )
+    }
+
+    private fun MediaAttachment.toJsonObject(): JsonObject {
+        return JsonObject(
+            mapOf(
+                "id" to JsonPrimitive(id),
+                "type" to JsonPrimitive(type.name),
+                "fileName" to JsonPrimitive(fileName),
+                "digestSha256" to JsonPrimitive(digestSha256),
+                "byteSize" to JsonPrimitive(byteSize),
+                "mimeType" to JsonPrimitive(mimeType),
+                "downloadUrl" to JsonPrimitive(downloadUrl)
             )
         )
     }
