@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -28,6 +29,8 @@ fun DirectChatScreen(
     onReplyCancelled: () -> Unit,
     onReactionRequested: (String, String) -> Unit
 ) {
+    val uriHandler = LocalUriHandler.current
+
     Column(
         modifier = Modifier.fillMaxSize().padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -67,7 +70,8 @@ fun DirectChatScreen(
                 MessageBubble(
                     item = message,
                     onReply = { onReplyRequested(message.id) },
-                    onReaction = { emoji -> onReactionRequested(message.id, emoji) }
+                    onReaction = { emoji -> onReactionRequested(message.id, emoji) },
+                    onOpenAttachment = { downloadUrl -> uriHandler.openUri(downloadUrl) }
                 )
             }
         }

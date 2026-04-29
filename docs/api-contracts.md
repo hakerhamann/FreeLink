@@ -74,6 +74,7 @@
 - On Android, `Media Gallery` now provides a manual Sprint 5 smoke-flow for `init upload` and `complete upload`, reachable from profile shared photos.
 - On Android direct chat, `Attach sample` now runs media `init/complete`, keeps pending attachment state in composer, and renders attachment cards inside message bubbles.
 - On Android direct chat, the composer now exposes a small attachment tray for `Photo / File / Voice` presets wired to the same media upload flow.
+- On Android direct chat, attachment cards now expose an `Open` action backed by the media `downloadUrl`.
 - On Android direct chat, outgoing messages now show local receipt progression (`sent -> delivered -> read`) and short peer typing indicator UX.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.
 - WS gateway `/ws/messages?chatId=` now requires `Authorization: Bearer <accessToken>` and emits `typing.*`, `message.created`, `receipt.*` events.

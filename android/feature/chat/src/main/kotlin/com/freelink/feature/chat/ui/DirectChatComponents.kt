@@ -77,7 +77,8 @@ fun ComposerRow(
 fun MessageBubble(
     item: DirectMessageUiModel,
     onReply: () -> Unit,
-    onReaction: (String) -> Unit
+    onReaction: (String) -> Unit,
+    onOpenAttachment: (String) -> Unit
 ) {
     val backgroundColor = if (item.isOutgoing) {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
@@ -109,7 +110,11 @@ fun MessageBubble(
                 )
             }
             if (item.attachment != null) {
-                AttachmentCard(attachment = item.attachment, textAlign = textAlign)
+                AttachmentCard(
+                    attachment = item.attachment,
+                    textAlign = textAlign,
+                    onOpenAttachment = onOpenAttachment
+                )
             }
             if (item.text.isNotBlank()) {
                 Text(
@@ -230,7 +235,8 @@ fun PendingAttachmentPreview(
 @Composable
 private fun AttachmentCard(
     attachment: DirectMessageAttachmentUiModel,
-    textAlign: TextAlign
+    textAlign: TextAlign,
+    onOpenAttachment: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -262,5 +268,20 @@ private fun AttachmentCard(
             textAlign = textAlign,
             modifier = Modifier.fillMaxWidth()
         )
+        if (attachment.downloadUrl.isNotBlank()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = if (textAlign == TextAlign.End) {
+                    Arrangement.End
+                } else {
+                    Arrangement.Start
+                }
+            ) {
+                AssistChip(
+                    onClick = { onOpenAttachment(attachment.downloadUrl) },
+                    label = { Text("Open") }
+                )
+            }
+        }
     }
 }
