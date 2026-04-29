@@ -14,6 +14,14 @@ interface MessagingService {
         userId: String,
         chatId: String,
         body: String,
-        envelope: EncryptedEnvelope?
+        envelope: EncryptedEnvelope?,
+        replyToMessageId: String?
     ): ChatMessage
+
+    fun setReaction(
+        userId: String,
+        chatId: String,
+        messageId: String,
+        emoji: String
+    ): ChatMessage?
 }

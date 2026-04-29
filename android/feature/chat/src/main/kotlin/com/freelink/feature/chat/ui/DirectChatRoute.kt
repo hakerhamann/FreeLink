@@ -32,6 +32,7 @@ import com.freelink.core.network.messages.KtorMessageApiClient
 import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.chat.data.DirectChatRepository
 import com.freelink.feature.chat.ui.model.DirectMessageUiModel
+import com.freelink.feature.chat.ui.model.ReplyTargetUiModel
 
 @Composable
 fun DirectChatRoute(
@@ -67,7 +68,10 @@ fun DirectChatRoute(
         onBack = onBack,
         onDraftChanged = viewModel::onDraftChanged,
         onSendMessage = viewModel::sendMessage,
-        onRefresh = viewModel::refresh
+        onRefresh = viewModel::refresh,
+        onReplyRequested = viewModel::onReplyRequested,
+        onReplyCancelled = viewModel::onReplyCancelled,
+        onReactionRequested = viewModel::onReactionRequested
     )
 }
 
@@ -77,7 +81,10 @@ private fun DirectChatScreen(
     onBack: () -> Unit,
     onDraftChanged: (String) -> Unit,
     onSendMessage: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onReplyRequested: (String) -> Unit,
+    onReplyCancelled: () -> Unit,
+    onReactionRequested: (String, String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -126,9 +133,18 @@ private fun DirectChatScreen(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             items(state.messages, key = { it.id }) { message ->
-                MessageBubble(item = message)
+                MessageBubble(
+                    item = message,
+                    onReply = { onReplyRequested(message.id) },
+                    onReaction = { emoji -> onReactionRequested(message.id, emoji) }
+                )
             }
         }
+
+        ReplyPreview(
+            replyTarget = state.replyTarget,
+            onCancelReply = onReplyCancelled
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -152,7 +168,11 @@ private fun DirectChatScreen(
 }
 
 @Composable
-private fun MessageBubble(item: DirectMessageUiModel) {
+private fun MessageBubble(
+    item: DirectMessageUiModel,
+    onReply: () -> Unit,
+    onReaction: (String) -> Unit
+) {
     val backgroundColor = if (item.isOutgoing) {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
     } else {
@@ -177,11 +197,32 @@ private fun MessageBubble(item: DirectMessageUiModel) {
                 .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            if (item.replyToSnippet != null) {
+                Text(
+                    text = "Reply: ${item.replyToSnippet}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = textAlign,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             Text(
                 text = item.text,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = textAlign
             )
+
+            if (item.reactions.isNotEmpty()) {
+                Text(
+                    text = item.reactions.entries.joinToString("  ") { "${it.key} ${it.value}" },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = textAlign
+                )
+            }
+
             Text(
                 text = listOfNotNull(item.timeLabel, item.deliveryStateLabel).joinToString(" | "),
                 style = MaterialTheme.typography.labelSmall,
@@ -189,6 +230,60 @@ private fun MessageBubble(item: DirectMessageUiModel) {
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = textAlign
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = if (item.isOutgoing) {
+                    Arrangement.spacedBy(6.dp, Alignment.End)
+                } else {
+                    Arrangement.spacedBy(6.dp, Alignment.Start)
+                }
+            ) {
+                AssistChip(
+                    onClick = onReply,
+                    label = { Text("Reply") }
+                )
+                AssistChip(
+                    onClick = { onReaction("👍") },
+                    label = { Text("👍") }
+                )
+                AssistChip(
+                    onClick = { onReaction("❤️") },
+                    label = { Text("❤️") }
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun ReplyPreview(
+    replyTarget: ReplyTargetUiModel?,
+    onCancelReply: () -> Unit
+) {
+    if (replyTarget == null) {
+        return
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = MaterialTheme.shapes.small
+            )
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Replying to: ${replyTarget.snippet}",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
+        )
+        AssistChip(
+            onClick = onCancelReply,
+            label = { Text("Cancel") }
+        )
     }
 }

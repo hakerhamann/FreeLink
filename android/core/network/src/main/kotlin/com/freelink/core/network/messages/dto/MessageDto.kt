@@ -16,5 +16,7 @@ data class MessageDto(
     val body: String,
     val createdAtEpochMs: Long,
     val deliveryState: String,
-    val envelope: MessageEnvelopeDto?
+    val envelope: MessageEnvelopeDto?,
+    val replyToMessageId: String?,
+    val reactions: Map<String, Int>
 )

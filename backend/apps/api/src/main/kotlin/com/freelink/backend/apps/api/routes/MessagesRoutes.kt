@@ -31,14 +31,23 @@ data class MessageDto(
     val body: String,
     val createdAtEpochMs: Long,
     val deliveryState: String,
-    val envelope: EncryptedEnvelopeDto? = null
+    val envelope: EncryptedEnvelopeDto? = null,
+    val replyToMessageId: String? = null,
+    val reactions: Map<String, Int> = emptyMap()
 )
 
 @Serializable
 data class SendMessageRequestDto(
     val chatId: String,
     val body: String,
-    val envelope: EncryptedEnvelopeDto? = null
+    val envelope: EncryptedEnvelopeDto? = null,
+    val replyToMessageId: String? = null
+)
+
+@Serializable
+data class SetReactionRequestDto(
+    val chatId: String,
+    val emoji: String
 )
 
 fun Route.installMessageRoutes(
@@ -46,17 +55,7 @@ fun Route.installMessageRoutes(
     messagingService: MessagingService
 ) {
     get("/messages") {
-        val accessToken = call.request.headers["Authorization"].extractBearerTokenForMessages()
-        if (accessToken.isNullOrBlank()) {
-            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Authorization bearer token is required."))
-            return@get
-        }
-
-        val userId = authService.resolveUserIdByAccessToken(accessToken)
-        if (userId.isNullOrBlank()) {
-            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Invalid credentials or session state."))
-            return@get
-        }
+        val userId = requireAuthorizedUserId(call, authService) ?: return@get
 
         val chatId = call.request.queryParameters["chatId"]?.trim()
         if (chatId.isNullOrBlank()) {
@@ -75,17 +74,7 @@ fun Route.installMessageRoutes(
     }
 
     post("/messages") {
-        val accessToken = call.request.headers["Authorization"].extractBearerTokenForMessages()
-        if (accessToken.isNullOrBlank()) {
-            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Authorization bearer token is required."))
-            return@post
-        }
-
-        val userId = authService.resolveUserIdByAccessToken(accessToken)
-        if (userId.isNullOrBlank()) {
-            call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Invalid credentials or session state."))
-            return@post
-        }
+        val userId = requireAuthorizedUserId(call, authService) ?: return@post
 
         val request = call.receive<SendMessageRequestDto>()
         if (request.chatId.isBlank() || request.body.trim().length !in 1..4000) {
@@ -97,11 +86,59 @@ fun Route.installMessageRoutes(
             userId = userId,
             chatId = request.chatId.trim(),
             body = request.body.trim(),
-            envelope = request.envelope?.toDomain()
+            envelope = request.envelope?.toDomain(),
+            replyToMessageId = request.replyToMessageId?.trim().takeUnless { it.isNullOrBlank() }
         )
 
         call.respond(HttpStatusCode.Created, created.toDto())
     }
+
+    post("/messages/{messageId}/reactions") {
+        val userId = requireAuthorizedUserId(call, authService) ?: return@post
+        val messageId = call.parameters["messageId"]?.trim()
+        if (messageId.isNullOrBlank()) {
+            call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "messageId is required."))
+            return@post
+        }
+
+        val request = call.receive<SetReactionRequestDto>()
+        val emoji = request.emoji.trim()
+        if (request.chatId.isBlank() || emoji.length !in 1..16) {
+            call.respond(HttpStatusCode.BadRequest, ErrorResponseDto(message = "Invalid reaction payload."))
+            return@post
+        }
+
+        val updated = messagingService.setReaction(
+            userId = userId,
+            chatId = request.chatId.trim(),
+            messageId = messageId,
+            emoji = emoji
+        )
+        if (updated == null) {
+            call.respond(HttpStatusCode.NotFound, ErrorResponseDto(message = "Message not found."))
+            return@post
+        }
+
+        call.respond(HttpStatusCode.OK, updated.toDto())
+    }
+}
+
+private suspend fun requireAuthorizedUserId(
+    call: io.ktor.server.application.ApplicationCall,
+    authService: AuthService
+): String? {
+    val accessToken = call.request.headers["Authorization"].extractBearerTokenForMessages()
+    if (accessToken.isNullOrBlank()) {
+        call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Authorization bearer token is required."))
+        return null
+    }
+
+    val userId = authService.resolveUserIdByAccessToken(accessToken)
+    if (userId.isNullOrBlank()) {
+        call.respond(HttpStatusCode.Unauthorized, ErrorResponseDto(message = "Invalid credentials or session state."))
+        return null
+    }
+    return userId
 }
 
 private fun ChatMessage.toDto(): MessageDto {
@@ -112,7 +149,9 @@ private fun ChatMessage.toDto(): MessageDto {
         body = body,
         createdAtEpochMs = createdAtEpochMs,
         deliveryState = deliveryState.name,
-        envelope = envelope?.toDto()
+        envelope = envelope?.toDto(),
+        replyToMessageId = replyToMessageId,
+        reactions = reactions
     )
 }
 

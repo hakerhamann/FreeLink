@@ -23,6 +23,8 @@ fun MessageDto.toDomain(): Message {
                 nonceBase64 = it.nonce,
                 sentAtIso = it.sentAt
             )
-        }
+        },
+        replyToMessageId = replyToMessageId,
+        reactions = reactions
     )
 }

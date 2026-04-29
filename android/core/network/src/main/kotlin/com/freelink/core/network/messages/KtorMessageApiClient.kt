@@ -56,31 +56,28 @@ class KtorMessageApiClient(
         val items = json.parseToJsonElement(bodyText) as? JsonArray ?: JsonArray(emptyList())
         val messages = items.mapNotNull { element ->
             val obj = element as? JsonObject ?: return@mapNotNull null
-            MessageDto(
-                id = obj.stringOrEmpty("id"),
-                chatId = obj.stringOrEmpty("chatId"),
-                senderUserId = obj.stringOrEmpty("senderUserId"),
-                body = obj.stringOrEmpty("body"),
-                createdAtEpochMs = obj.longOrZero("createdAtEpochMs"),
-                deliveryState = obj.stringOrEmpty("deliveryState"),
-                envelope = obj.envelopeOrNull("envelope")
-            )
+            obj.toMessageDto()
         }.map { it.toDomain() }
 
         return AuthApiResult.Success(messages)
     }
 
-    override suspend fun sendMessage(accessToken: String, chatId: String, body: String): AuthApiResult<Message> {
+    override suspend fun sendMessage(
+        accessToken: String,
+        chatId: String,
+        body: String,
+        replyToMessageId: String?
+    ): AuthApiResult<Message> {
+        val payload = buildMap<String, JsonPrimitive> {
+            put("chatId", JsonPrimitive(chatId))
+            put("body", JsonPrimitive(body))
+            if (!replyToMessageId.isNullOrBlank()) {
+                put("replyToMessageId", JsonPrimitive(replyToMessageId))
+            }
+        }
         val response = client.post("$baseUrl/messages") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
-            setBody(
-                JsonObject(
-                    mapOf(
-                        "chatId" to JsonPrimitive(chatId),
-                        "body" to JsonPrimitive(body)
-                    )
-                )
-            )
+            setBody(JsonObject(payload))
         }
 
         if (!response.status.isSuccess()) {
@@ -91,18 +88,45 @@ class KtorMessageApiClient(
         }
 
         val bodyText = response.body<String>()
-        val root = json.parseToJsonElement(bodyText) as? JsonObject
-            ?: return AuthApiResult.Failure(message = "Malformed message payload", statusCode = response.status.value)
+        val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toMessageDto()
+            ?: return AuthApiResult.Failure(
+                message = "Malformed message payload",
+                statusCode = response.status.value
+            )
+        return AuthApiResult.Success(dto.toDomain())
+    }
 
-        val dto = MessageDto(
-            id = root.stringOrEmpty("id"),
-            chatId = root.stringOrEmpty("chatId"),
-            senderUserId = root.stringOrEmpty("senderUserId"),
-            body = root.stringOrEmpty("body"),
-            createdAtEpochMs = root.longOrZero("createdAtEpochMs"),
-            deliveryState = root.stringOrEmpty("deliveryState"),
-            envelope = root.envelopeOrNull("envelope")
-        )
+    override suspend fun setReaction(
+        accessToken: String,
+        chatId: String,
+        messageId: String,
+        emoji: String
+    ): AuthApiResult<Message> {
+        val response = client.post("$baseUrl/messages/$messageId/reactions") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(
+                JsonObject(
+                    mapOf(
+                        "chatId" to JsonPrimitive(chatId),
+                        "emoji" to JsonPrimitive(emoji)
+                    )
+                )
+            )
+        }
+
+        if (!response.status.isSuccess()) {
+            return AuthApiResult.Failure(
+                message = "Failed to set reaction",
+                statusCode = response.status.value
+            )
+        }
+
+        val bodyText = response.body<String>()
+        val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toMessageDto()
+            ?: return AuthApiResult.Failure(
+                message = "Malformed reaction payload",
+                statusCode = response.status.value
+            )
         return AuthApiResult.Success(dto.toDomain())
     }
 
@@ -110,9 +134,28 @@ class KtorMessageApiClient(
         return value in 200..299
     }
 
+    private fun JsonObject.toMessageDto(): MessageDto {
+        return MessageDto(
+            id = stringOrEmpty("id"),
+            chatId = stringOrEmpty("chatId"),
+            senderUserId = stringOrEmpty("senderUserId"),
+            body = stringOrEmpty("body"),
+            createdAtEpochMs = longOrZero("createdAtEpochMs"),
+            deliveryState = stringOrEmpty("deliveryState"),
+            envelope = envelopeOrNull("envelope"),
+            replyToMessageId = stringOrNull("replyToMessageId"),
+            reactions = intMapOrEmpty("reactions")
+        )
+    }
+
     private fun JsonObject.stringOrEmpty(key: String): String {
         val value = this[key] as? JsonPrimitive
         return value?.content ?: ""
+    }
+
+    private fun JsonObject.stringOrNull(key: String): String? {
+        val value = this[key] as? JsonPrimitive ?: return null
+        return value.content.takeIf { it.isNotBlank() }
     }
 
     private fun JsonObject.longOrZero(key: String): Long {
@@ -130,6 +173,16 @@ class KtorMessageApiClient(
             nonce = value.stringOrEmpty("nonce"),
             sentAt = value.stringOrEmpty("sentAt")
         )
+    }
+
+    private fun JsonObject.intMapOrEmpty(key: String): Map<String, Int> {
+        val raw = this[key] as? JsonObject ?: return emptyMap()
+        return raw.entries
+            .mapNotNull { (emoji, value) ->
+                val count = (value as? JsonPrimitive)?.content?.toIntOrNull() ?: return@mapNotNull null
+                if (count > 0) emoji to count else null
+            }
+            .toMap(linkedMapOf())
     }
 
     companion object {
