@@ -9,6 +9,11 @@ interface ChatsService {
         unreadOnly: Boolean
     ): List<ChatSummary>
 
+    fun isKnownChat(
+        userId: String,
+        chatId: String
+    ): Boolean
+
     fun archiveChat(
         userId: String,
         chatId: String
