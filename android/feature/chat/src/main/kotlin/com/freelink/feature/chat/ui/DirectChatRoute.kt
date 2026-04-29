@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -17,12 +18,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.freelink.core.datastore.auth.AuthSessionStore
+import com.freelink.core.network.auth.KtorAuthApiClient
+import com.freelink.core.network.messages.KtorMessageApiClient
+import com.freelink.feature.auth.data.AuthRepository
+import com.freelink.feature.chat.data.DirectChatRepository
 import com.freelink.feature.chat.ui.model.DirectMessageUiModel
 
 @Composable
@@ -31,9 +39,26 @@ fun DirectChatRoute(
     chatTitle: String,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current.applicationContext
+    val authRepository = remember {
+        AuthRepository(
+            apiClient = KtorAuthApiClient(),
+            sessionStore = AuthSessionStore.create(context)
+        )
+    }
+    val repository = remember {
+        DirectChatRepository(
+            authRepository = authRepository,
+            messageApiClient = KtorMessageApiClient()
+        )
+    }
     val viewModel: DirectChatViewModel = viewModel(
         key = "direct-chat-$chatId",
-        factory = DirectChatViewModel.factory(chatId = chatId, chatTitle = chatTitle)
+        factory = DirectChatViewModel.factory(
+            chatId = chatId,
+            chatTitle = chatTitle,
+            repository = repository
+        )
     )
     val state by viewModel.uiState.collectAsState()
 
@@ -41,7 +66,8 @@ fun DirectChatRoute(
         state = state,
         onBack = onBack,
         onDraftChanged = viewModel::onDraftChanged,
-        onSendMessage = viewModel::sendMessage
+        onSendMessage = viewModel::sendMessage,
+        onRefresh = viewModel::refresh
     )
 }
 
@@ -50,7 +76,8 @@ private fun DirectChatScreen(
     state: DirectChatUiState,
     onBack: () -> Unit,
     onDraftChanged: (String) -> Unit,
-    onSendMessage: () -> Unit
+    onSendMessage: () -> Unit,
+    onRefresh: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -72,14 +99,25 @@ private fun DirectChatScreen(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
-            Text(
-                text = if (state.isPeerTyping) "typing..." else "",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary
+            AssistChip(
+                onClick = onRefresh,
+                label = { Text(if (state.isRefreshing) "Refreshing..." else "Refresh") }
             )
         }
 
         HorizontalDivider()
+
+        if (state.isLoading) {
+            CircularProgressIndicator()
+        }
+
+        if (state.errorMessage != null) {
+            Text(
+                text = state.errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
 
         LazyColumn(
             modifier = Modifier
@@ -106,6 +144,7 @@ private fun DirectChatScreen(
             )
             AssistChip(
                 onClick = onSendMessage,
+                enabled = state.draft.isNotBlank(),
                 label = { Text("Send") }
             )
         }
@@ -124,8 +163,7 @@ private fun MessageBubble(item: DirectMessageUiModel) {
     val textAlign = if (item.isOutgoing) TextAlign.End else TextAlign.Start
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = alignment,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -145,7 +183,7 @@ private fun MessageBubble(item: DirectMessageUiModel) {
                 textAlign = textAlign
             )
             Text(
-                text = listOfNotNull(item.timeLabel, item.deliveryStateLabel).joinToString(" • "),
+                text = listOfNotNull(item.timeLabel, item.deliveryStateLabel).joinToString(" | "),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.fillMaxWidth(),

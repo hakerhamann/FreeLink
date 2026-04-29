@@ -11,6 +11,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(project(":android:core:ui"))
     implementation(project(":android:core:model"))
+    implementation(project(":android:core:datastore"))
+    implementation(project(":android:core:network"))
+    implementation(project(":android:feature:auth"))
     testImplementation(libs.junit4)
 }
 

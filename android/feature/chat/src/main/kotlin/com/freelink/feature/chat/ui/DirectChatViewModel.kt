@@ -5,37 +5,45 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.freelink.feature.chat.ui.model.DirectMessageUiModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import com.freelink.feature.chat.data.DirectChatRepository
+import com.freelink.feature.chat.data.DirectChatResult
+import com.freelink.feature.chat.ui.mapper.toDirectUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.UUID
 
 class DirectChatViewModel(
-    chatId: String,
-    chatTitle: String
+    private val chatId: String,
+    chatTitle: String,
+    private val repository: DirectChatRepository
 ) : ViewModel() {
-    private val peerUserId = "peer"
-    private var receiveJob: Job? = null
+    private var currentUserId: String? = null
 
     private val _uiState = MutableStateFlow(
         DirectChatUiState(
             chatId = chatId,
-            chatTitle = chatTitle.ifBlank { "Direct chat" },
-            messages = seedMessages()
+            chatTitle = chatTitle.ifBlank { "Direct chat" }
         )
     )
     val uiState: StateFlow<DirectChatUiState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            currentUserId = repository.currentUserId()
+            refreshMessages(isInitial = true)
+        }
+    }
+
     fun onDraftChanged(value: String) {
         _uiState.update { it.copy(draft = value) }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            refreshMessages(isInitial = false)
+        }
     }
 
     fun sendMessage() {
@@ -44,79 +52,74 @@ class DirectChatViewModel(
             return
         }
 
-        val outgoing = DirectMessageUiModel(
-            id = UUID.randomUUID().toString(),
-            text = text,
-            isOutgoing = true,
-            timeLabel = nowTimeLabel(),
-            deliveryStateLabel = "sent"
-        )
-
-        _uiState.update { state ->
-            state.copy(
-                draft = "",
-                isPeerTyping = true,
-                messages = state.messages + outgoing
-            )
-        }
-
-        receiveJob?.cancel()
-        receiveJob = viewModelScope.launch {
-            delay(1_200)
-            val incoming = DirectMessageUiModel(
-                id = UUID.randomUUID().toString(),
-                text = "Принято: $text",
-                isOutgoing = false,
-                timeLabel = nowTimeLabel()
-            )
-            _uiState.update { state ->
-                state.copy(
-                    isPeerTyping = false,
-                    messages = state.messages + incoming
-                )
+        viewModelScope.launch {
+            _uiState.update { it.copy(errorMessage = null) }
+            when (val result = repository.sendMessage(chatId = chatId, body = text)) {
+                is DirectChatResult.Success -> {
+                    _uiState.update { it.copy(draft = "") }
+                    refreshMessages(isInitial = false)
+                }
+                is DirectChatResult.Failure -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
             }
         }
     }
 
-    override fun onCleared() {
-        receiveJob?.cancel()
-        super.onCleared()
-    }
-
-    private fun seedMessages(): List<DirectMessageUiModel> {
-        return listOf(
-            DirectMessageUiModel(
-                id = "seed-1",
-                text = "Привет! На связи.",
-                isOutgoing = false,
-                timeLabel = "18:24"
-            ),
-            DirectMessageUiModel(
-                id = "seed-2",
-                text = "Привет! Как дела?",
-                isOutgoing = true,
-                timeLabel = "18:25",
-                deliveryStateLabel = "read"
+    private suspend fun refreshMessages(isInitial: Boolean) {
+        _uiState.update { state ->
+            state.copy(
+                isLoading = if (isInitial) true else state.isLoading,
+                isRefreshing = !isInitial,
+                errorMessage = null
             )
-        )
-    }
+        }
 
-    private fun nowTimeLabel(): String {
-        return Instant.now()
-            .atZone(ZoneId.systemDefault())
-            .toLocalTime()
-            .format(timeFormatter)
+        when (val result = repository.loadMessages(chatId)) {
+            is DirectChatResult.Success -> {
+                val mapped = result.value
+                    .sortedBy { it.createdAtEpochMs }
+                    .map { it.toDirectUiModel(currentUserId = currentUserId) }
+
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        messages = mapped,
+                        errorMessage = null
+                    )
+                }
+            }
+            is DirectChatResult.Failure -> {
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        errorMessage = result.message
+                    )
+                }
+            }
+        }
     }
 
     companion object {
-        private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-        fun factory(chatId: String, chatTitle: String): ViewModelProvider.Factory {
+        fun factory(
+            chatId: String,
+            chatTitle: String,
+            repository: DirectChatRepository
+        ): ViewModelProvider.Factory {
             return viewModelFactory {
                 initializer {
                     DirectChatViewModel(
                         chatId = chatId,
-                        chatTitle = chatTitle
+                        chatTitle = chatTitle,
+                        repository = repository
                     )
                 }
             }

@@ -57,4 +57,5 @@
 - On Android, chat list now syncs from API to Room (`core:database`) and applies search/unread filtering from local cache.
 - On Android, people list now syncs from API to Room and supports local search by display name/login.
 - On Android chat tab, a single search query now matches both local chats and local people cache.
+- On Android direct chat, message history and send action are now backed by `GET/POST /messages` with token refresh fallback.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.
