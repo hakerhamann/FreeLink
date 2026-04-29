@@ -2,11 +2,13 @@ package com.freelink.backend.apps.api
 
 import com.freelink.backend.apps.api.routes.installAuthRoutes
 import com.freelink.backend.apps.api.routes.installChatRoutes
+import com.freelink.backend.apps.api.routes.installGroupRoutes
 import com.freelink.backend.apps.api.routes.installMessageRoutes
 import com.freelink.backend.apps.api.routes.installPeopleRoutes
 import com.freelink.backend.apps.api.routes.installPrivacyRoutes
 import com.freelink.backend.libs.auth.service.InMemoryAuthService
 import com.freelink.backend.libs.chats.service.InMemoryChatsService
+import com.freelink.backend.libs.groups.service.InMemoryGroupsService
 import com.freelink.backend.libs.messaging.service.InMemoryMessagingService
 import com.freelink.backend.libs.people.service.InMemoryPeopleService
 import com.freelink.backend.libs.privacy.service.InMemoryPrivacySettingsService
@@ -29,6 +31,7 @@ fun main() {
 fun Application.freeLinkApiModule() {
     val authService = InMemoryAuthService()
     val chatsService = InMemoryChatsService()
+    val groupsService = InMemoryGroupsService()
     val messagingService = InMemoryMessagingService()
     val peopleService = InMemoryPeopleService()
     val privacySettingsService = InMemoryPrivacySettingsService()
@@ -46,6 +49,7 @@ fun Application.freeLinkApiModule() {
         }
         installAuthRoutes(authService)
         installChatRoutes(authService, chatsService)
+        installGroupRoutes(authService, groupsService)
         installMessageRoutes(authService, messagingService)
         installPeopleRoutes(authService, peopleService)
         installPrivacyRoutes(authService, privacySettingsService)

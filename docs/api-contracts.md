@@ -62,6 +62,8 @@
 - On Android direct chat, message history and send action are now backed by `GET/POST /messages` with token refresh fallback.
 - On Android direct chat, outgoing `POST /messages` now attaches a client-generated envelope (`version=1`, metadata + transport ciphertext shape).
 - On Android direct chat, message reply and reaction actions are now wired to messages API.
+- `GET /groups` and `POST /groups` are now available in backend API with bearer auth.
+- On Android `Spaces` tab, group list refresh/search and group creation are now wired to `/groups`.
 - On Android direct chat, outgoing messages now show local receipt progression (`sent -> delivered -> read`) and short peer typing indicator UX.
 - WS gateway `/ws/chats` now requires `Authorization: Bearer <accessToken>` and emits `chat.updated` for chat list resync.
 - WS gateway `/ws/messages?chatId=` now requires `Authorization: Bearer <accessToken>` and emits `typing.*`, `message.created`, `receipt.*` events.

@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":android:feature:chat"))
     implementation(project(":android:feature:chatlist"))
     implementation(project(":android:feature:people"))
+    implementation(project(":android:feature:group"))
     implementation(project(":android:feature:devices"))
     implementation(project(":android:feature:profile"))
     implementation(project(":android:feature:settings"))
