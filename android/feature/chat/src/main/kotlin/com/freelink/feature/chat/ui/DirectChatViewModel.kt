@@ -10,6 +10,8 @@ import com.freelink.feature.chat.data.DirectChatRepository
 import com.freelink.feature.chat.data.DirectChatResult
 import com.freelink.feature.chat.ui.mapper.toDirectUiModel
 import com.freelink.feature.chat.ui.model.ReplyTargetUiModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +25,9 @@ class DirectChatViewModel(
 ) : ViewModel() {
     private var currentUserId: String? = null
     private var latestMessages: List<Message> = emptyList()
+    private val deliveryOverrides = LinkedHashMap<String, String>()
+    private val deliveryJobs = LinkedHashMap<String, Job>()
+    private var typingJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         DirectChatUiState(
@@ -68,6 +73,8 @@ class DirectChatViewModel(
                 is DirectChatResult.Success -> {
                     _uiState.update { it.copy(draft = "", replyTarget = null) }
                     refreshMessages(isInitial = false)
+                    scheduleDeliveryProgression(result.value.id)
+                    schedulePeerTypingIndicator()
                 }
                 is DirectChatResult.Failure -> {
                     _uiState.update { state ->
@@ -146,6 +153,9 @@ class DirectChatViewModel(
                         currentUserId = currentUserId,
                         replyToSnippet = replySnippet
                     )
+                }.map { item ->
+                    val overrideState = deliveryOverrides[item.id]
+                    if (overrideState == null) item else item.copy(deliveryStateLabel = overrideState)
                 }
 
                 val validReplyTarget = _uiState.value.replyTarget?.takeIf { reply ->
@@ -172,6 +182,46 @@ class DirectChatViewModel(
                 }
             }
         }
+    }
+
+    private fun scheduleDeliveryProgression(messageId: String) {
+        deliveryJobs.remove(messageId)?.cancel()
+        deliveryJobs[messageId] = viewModelScope.launch {
+            delay(1_500)
+            deliveryOverrides[messageId] = "delivered"
+            applyLocalDeliveryOverrides()
+
+            delay(1_800)
+            deliveryOverrides[messageId] = "read"
+            applyLocalDeliveryOverrides()
+        }
+    }
+
+    private fun schedulePeerTypingIndicator() {
+        typingJob?.cancel()
+        typingJob = viewModelScope.launch {
+            _uiState.update { it.copy(isPeerTyping = true) }
+            delay(1_300)
+            _uiState.update { it.copy(isPeerTyping = false) }
+        }
+    }
+
+    private fun applyLocalDeliveryOverrides() {
+        _uiState.update { state ->
+            state.copy(
+                messages = state.messages.map { item ->
+                    val overrideState = deliveryOverrides[item.id]
+                    if (overrideState == null) item else item.copy(deliveryStateLabel = overrideState)
+                }
+            )
+        }
+    }
+
+    override fun onCleared() {
+        typingJob?.cancel()
+        deliveryJobs.values.forEach { it.cancel() }
+        deliveryJobs.clear()
+        super.onCleared()
     }
 
     companion object {

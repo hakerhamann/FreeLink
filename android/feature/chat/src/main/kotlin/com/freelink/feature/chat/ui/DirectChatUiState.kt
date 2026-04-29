@@ -9,6 +9,7 @@ data class DirectChatUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val draft: String = "",
+    val isPeerTyping: Boolean = false,
     val messages: List<DirectMessageUiModel> = emptyList(),
     val replyTarget: ReplyTargetUiModel? = null,
     val errorMessage: String? = null
