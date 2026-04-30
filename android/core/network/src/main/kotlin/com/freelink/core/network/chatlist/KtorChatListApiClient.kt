@@ -40,7 +40,7 @@ class KtorChatListApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch chats",
+                message = "Не удалось загрузить список чатов.",
                 statusCode = response.status.value
             )
         }
@@ -55,7 +55,7 @@ class KtorChatListApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch archived chats",
+                message = "Не удалось загрузить архив чатов.",
                 statusCode = response.status.value
             )
         }
@@ -73,7 +73,7 @@ class KtorChatListApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to archive chat",
+                message = "Не удалось перенести чат в архив.",
                 statusCode = response.status.value
             )
         }
@@ -91,7 +91,7 @@ class KtorChatListApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to restore archived chat",
+                message = "Не удалось восстановить чат из архива.",
                 statusCode = response.status.value
             )
         }

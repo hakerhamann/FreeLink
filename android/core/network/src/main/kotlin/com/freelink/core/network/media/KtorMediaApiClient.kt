@@ -56,14 +56,14 @@ class KtorMediaApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to init media upload",
+                message = "Не удалось подготовить загрузку файла.",
                 statusCode = response.status.value
             )
         }
 
         val dto = (json.parseToJsonElement(response.body<String>()) as? JsonObject)?.toSessionDto()
             ?: return AuthApiResult.Failure(
-                message = "Malformed media init payload",
+                message = "Сервер вернул некорректные данные загрузки файла.",
                 statusCode = response.status.value
             )
         return AuthApiResult.Success(dto.toDomain())
@@ -86,14 +86,14 @@ class KtorMediaApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to complete media upload",
+                message = "Не удалось завершить загрузку файла.",
                 statusCode = response.status.value
             )
         }
 
         val dto = (json.parseToJsonElement(response.body<String>()) as? JsonObject)?.toUploadedMediaDto()
             ?: return AuthApiResult.Failure(
-                message = "Malformed media complete payload",
+                message = "Сервер вернул некорректные данные файла.",
                 statusCode = response.status.value
             )
         return AuthApiResult.Success(dto.toDomain())

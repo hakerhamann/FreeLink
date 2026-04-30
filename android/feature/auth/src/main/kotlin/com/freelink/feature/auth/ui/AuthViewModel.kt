@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.freelink.feature.auth.data.AuthRepository
 import com.freelink.feature.auth.data.AuthRepositoryResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,38 +49,50 @@ class AuthViewModel(
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            val authResult = when (current.mode) {
-                AuthMode.LOGIN -> authRepository.login(login, password)
-                AuthMode.REGISTER -> authRepository.register(login, password)
-            }
-
-            when (authResult) {
-                is AuthRepositoryResult.Success -> {
-                    val devicesCount = when (val devicesResult = authRepository.loadDevices()) {
-                        is AuthRepositoryResult.Success -> devicesResult.value.size
-                        is AuthRepositoryResult.Failure -> 0
-                    }
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isAuthorized = true,
-                            knownDevicesCount = devicesCount,
-                            errorMessage = null
-                        )
-                    }
+                val authResult = when (current.mode) {
+                    AuthMode.LOGIN -> authRepository.login(login, password)
+                    AuthMode.REGISTER -> authRepository.register(login, password)
                 }
 
-                is AuthRepositoryResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isAuthorized = false,
-                            errorMessage = authResult.message
-                        )
+                when (authResult) {
+                    is AuthRepositoryResult.Success -> {
+                        val devicesCount = when (val devicesResult = authRepository.loadDevices()) {
+                            is AuthRepositoryResult.Success -> devicesResult.value.size
+                            is AuthRepositoryResult.Failure -> 0
+                        }
+
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isAuthorized = true,
+                                knownDevicesCount = devicesCount,
+                                errorMessage = null
+                            )
+                        }
                     }
+
+                    is AuthRepositoryResult.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isAuthorized = false,
+                                errorMessage = authResult.message
+                            )
+                        }
+                    }
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isAuthorized = false,
+                        errorMessage = "Не удалось завершить регистрацию. Попробуйте ещё раз."
+                    )
                 }
             }
         }

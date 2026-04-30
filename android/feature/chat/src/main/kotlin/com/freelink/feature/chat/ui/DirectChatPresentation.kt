@@ -11,19 +11,19 @@ fun defaultAttachmentTrayActions(): List<AttachmentTrayActionUiModel> {
     return listOf(
         AttachmentTrayActionUiModel(
             id = PHOTO_ACTION_ID,
-            label = "Photo"
+            label = "Фото"
         ),
         AttachmentTrayActionUiModel(
             id = VIDEO_ACTION_ID,
-            label = "Video"
+            label = "Видео"
         ),
         AttachmentTrayActionUiModel(
             id = FILE_ACTION_ID,
-            label = "File"
+            label = "Файл"
         ),
         AttachmentTrayActionUiModel(
             id = VOICE_ACTION_ID,
-            label = "Voice"
+            label = "Голос"
         )
     )
 }

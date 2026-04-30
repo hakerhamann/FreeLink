@@ -123,7 +123,7 @@ class ChatListRepository(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
-            ChatListResult.Failure("Could not sync FreeLink data.")
+            ChatListResult.Failure("Не удалось синхронизировать данные FreeLink.")
         }
     }
 }

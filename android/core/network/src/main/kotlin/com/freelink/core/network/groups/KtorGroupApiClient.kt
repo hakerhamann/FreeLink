@@ -46,7 +46,7 @@ class KtorGroupApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch groups",
+                message = "Не удалось загрузить группы.",
                 statusCode = response.status.value
             )
         }
@@ -68,7 +68,7 @@ class KtorGroupApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch group details",
+                message = "Не удалось загрузить данные группы.",
                 statusCode = response.status.value
             )
         }
@@ -76,7 +76,7 @@ class KtorGroupApiClient(
         val bodyText = response.body<String>()
         val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toGroupDetailsDto()
             ?: return AuthApiResult.Failure(
-                message = "Malformed group details payload",
+                message = "Сервер вернул некорректные данные группы.",
                 statusCode = response.status.value
             )
 
@@ -102,7 +102,7 @@ class KtorGroupApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to create group",
+                message = "Не удалось создать группу.",
                 statusCode = response.status.value
             )
         }
@@ -110,7 +110,7 @@ class KtorGroupApiClient(
         val bodyText = response.body<String>()
         val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toGroupDto()
             ?: return AuthApiResult.Failure(
-                message = "Malformed group payload",
+                message = "Сервер вернул некорректную группу.",
                 statusCode = response.status.value
             )
 

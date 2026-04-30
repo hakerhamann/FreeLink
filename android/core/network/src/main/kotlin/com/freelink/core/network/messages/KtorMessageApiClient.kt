@@ -53,7 +53,7 @@ class KtorMessageApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch messages",
+                message = "Не удалось загрузить сообщения.",
                 statusCode = response.status.value
             )
         }
@@ -96,7 +96,7 @@ class KtorMessageApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to send message",
+                message = "Не удалось отправить сообщение.",
                 statusCode = response.status.value
             )
         }
@@ -104,7 +104,7 @@ class KtorMessageApiClient(
         val bodyText = response.body<String>()
         val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toMessageDto()
             ?: return AuthApiResult.Failure(
-                message = "Malformed message payload",
+                message = "Сервер вернул некорректное сообщение.",
                 statusCode = response.status.value
             )
         return AuthApiResult.Success(dto.toDomain())
@@ -130,7 +130,7 @@ class KtorMessageApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to set reaction",
+                message = "Не удалось поставить реакцию.",
                 statusCode = response.status.value
             )
         }
@@ -138,7 +138,7 @@ class KtorMessageApiClient(
         val bodyText = response.body<String>()
         val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toMessageDto()
             ?: return AuthApiResult.Failure(
-                message = "Malformed reaction payload",
+                message = "Сервер вернул некорректную реакцию.",
                 statusCode = response.status.value
             )
         return AuthApiResult.Success(dto.toDomain())

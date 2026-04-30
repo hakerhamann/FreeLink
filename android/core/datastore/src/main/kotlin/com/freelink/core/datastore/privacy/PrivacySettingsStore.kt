@@ -1,4 +1,4 @@
-package com.freelink.core.datastore.privacy
+﻿package com.freelink.core.datastore.privacy
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -48,6 +48,9 @@ class PrivacySettingsStore(
     }
 
     companion object {
+        @Volatile
+        private var instance: PrivacySettingsStore? = null
+
         private object Keys {
             val hiddenModeEnabled = booleanPreferencesKey("privacy_hidden_mode_enabled")
             val biometricLockRequired = booleanPreferencesKey("privacy_biometric_lock_required")
@@ -57,10 +60,19 @@ class PrivacySettingsStore(
         }
 
         fun create(context: Context): PrivacySettingsStore {
-            val store = PreferenceDataStoreFactory.create {
-                context.preferencesDataStoreFile("freelink_privacy_preferences")
+            return instance ?: synchronized(this) {
+                instance ?: buildStore(context.applicationContext).also { store ->
+                    instance = store
+                }
             }
-            return PrivacySettingsStore(store)
+        }
+
+        private fun buildStore(context: Context): PrivacySettingsStore {
+            return PrivacySettingsStore(
+                PreferenceDataStoreFactory.create {
+                    context.preferencesDataStoreFile("freelink_privacy_preferences")
+                }
+            )
         }
     }
 }

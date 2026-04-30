@@ -11,7 +11,7 @@ class DirectChatPresentationTest {
         val actions = defaultAttachmentTrayActions()
 
         assertEquals(listOf("photo", "video", "file", "voice"), actions.map { it.id })
-        assertEquals(listOf("Photo", "Video", "File", "Voice"), actions.map { it.label })
+        assertEquals(listOf("Фото", "Видео", "Файл", "Голос"), actions.map { it.label })
     }
 
     @Test

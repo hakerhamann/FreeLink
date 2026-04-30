@@ -165,7 +165,7 @@ class AuthRepository(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
-            AuthRepositoryResult.Failure("Could not connect to FreeLink server.")
+            AuthRepositoryResult.Failure("Не удалось подключиться к серверу FreeLink.")
         }
     }
 }

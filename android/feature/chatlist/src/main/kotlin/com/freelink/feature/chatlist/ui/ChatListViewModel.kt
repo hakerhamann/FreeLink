@@ -129,7 +129,7 @@ class ChatListViewModel(
                 val mappedPeople = result.people.map { it.toChatListPersonUiModel() }
                 val noResults = mappedChats.isEmpty() && mappedPeople.isEmpty()
                 val emptyStateMessage = if (noResults) {
-                    if (result.hasQuery) "No chats or people found" else "No chats found"
+                    if (result.hasQuery) "Чаты или люди не найдены" else "Чаты не найдены"
                 } else {
                     null
                 }

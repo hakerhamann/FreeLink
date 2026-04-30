@@ -33,11 +33,11 @@ private data class RootDestination(
 )
 
 private val rootDestinations = listOf(
-    RootDestination(route = "chats", label = "Chats"),
-    RootDestination(route = "people", label = "People"),
-    RootDestination(route = "spaces", label = "Spaces"),
-    RootDestination(route = "calls", label = "Calls"),
-    RootDestination(route = "profile", label = "Profile")
+    RootDestination(route = "chats", label = "Чаты"),
+    RootDestination(route = "people", label = "Люди"),
+    RootDestination(route = "spaces", label = "Пространства"),
+    RootDestination(route = "calls", label = "Звонки"),
+    RootDestination(route = "profile", label = "Профиль")
 )
 
 private const val authRoute = "auth"
@@ -106,7 +106,7 @@ fun FreeLinkAppNavHost() {
                     }
                 }
             }
-            composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Calls") }
+            composable(route = "calls") { FreeLinkPlaceholderScreen(title = "Звонки") }
             composable(route = "profile") {
                 ProfileRoute(
                     onOpenPrivacySettings = {

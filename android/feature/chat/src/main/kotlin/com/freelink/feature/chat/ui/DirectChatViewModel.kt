@@ -34,7 +34,7 @@ class DirectChatViewModel(
     private val _uiState = MutableStateFlow(
         DirectChatUiState(
             chatId = chatId,
-            chatTitle = chatTitle.ifBlank { "Direct chat" }
+            chatTitle = chatTitle.ifBlank { "Чат" }
         )
     )
     val uiState: StateFlow<DirectChatUiState> = _uiState.asStateFlow()

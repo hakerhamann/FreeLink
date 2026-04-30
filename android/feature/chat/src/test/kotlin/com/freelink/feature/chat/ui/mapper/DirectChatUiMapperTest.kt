@@ -39,9 +39,9 @@ class DirectChatUiMapperTest {
         )
 
         assertNotNull(mapped.attachment)
-        assertEquals("Photo", mapped.attachment?.typeLabel)
+        assertEquals("\u0424\u043e\u0442\u043e", mapped.attachment?.typeLabel)
         assertEquals("sunset.jpg", mapped.attachment?.fileName)
-        assertEquals("Photo preview", mapped.attachment?.previewLabel)
+        assertEquals("Предпросмотр фото", mapped.attachment?.previewLabel)
         assertEquals("https://example.local/sunset.jpg", mapped.attachment?.downloadUrl)
     }
 
@@ -71,7 +71,7 @@ class DirectChatUiMapperTest {
         )
 
         assertEquals(DirectMessageAttachmentKindUiModel.VOICE, mapped.attachment?.kind)
-        assertEquals("Voice message", mapped.attachment?.previewLabel)
+        assertEquals("Голосовое сообщение", mapped.attachment?.previewLabel)
         assertEquals("00:16", mapped.attachment?.durationLabel)
         assertFalse(mapped.attachment?.waveformBars.isNullOrEmpty())
     }
@@ -102,7 +102,7 @@ class DirectChatUiMapperTest {
         )
 
         assertEquals(DirectMessageAttachmentKindUiModel.FILE, mapped.attachment?.kind)
-        assertEquals("File attachment", mapped.attachment?.previewLabel)
+        assertEquals("Файл", mapped.attachment?.previewLabel)
         assertEquals("47.4 KB", mapped.attachment?.sizeLabel)
     }
 
@@ -124,7 +124,7 @@ class DirectChatUiMapperTest {
         )
 
         assertNotNull(mapped.expiresAtLabel)
-        assertTrue(mapped.expiresAtLabel?.startsWith("Expires ") == true)
+        assertTrue(mapped.expiresAtLabel?.startsWith("Исчезнет в ") == true)
     }
 
     @Test

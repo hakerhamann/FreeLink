@@ -60,7 +60,7 @@ class KtorAuthApiClient(
             AuthApiResult.Success(Unit)
         } else {
             AuthApiResult.Failure(
-                message = "Logout failed",
+                message = "Не удалось выйти из аккаунта.",
                 statusCode = response.status.value
             )
         }
@@ -73,7 +73,7 @@ class KtorAuthApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch devices",
+                message = "Не удалось загрузить устройства.",
                 statusCode = response.status.value
             )
         }
@@ -104,7 +104,7 @@ class KtorAuthApiClient(
             AuthApiResult.Success(Unit)
         } else {
             AuthApiResult.Failure(
-                message = "Failed to revoke device",
+                message = "Не удалось отключить устройство.",
                 statusCode = response.status.value
             )
         }
@@ -131,13 +131,13 @@ class KtorAuthApiClient(
     private fun parseAuthResponse(status: HttpStatusCode, bodyText: String): AuthApiResult<AuthSession> {
         if (!status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = extractErrorMessage(bodyText) ?: "Authentication failed",
+                message = authFailureMessage(status),
                 statusCode = status.value
             )
         }
 
         val jsonObject = json.parseToJsonElement(bodyText) as? JsonObject
-            ?: return AuthApiResult.Failure("Malformed auth response", status.value)
+            ?: return AuthApiResult.Failure("Сервер вернул некорректный ответ авторизации.", status.value)
 
         return AuthApiResult.Success(
             AuthSession(
@@ -150,11 +150,12 @@ class KtorAuthApiClient(
         )
     }
 
-    private fun extractErrorMessage(bodyText: String): String? {
-        return runCatching {
-            val objectValue = json.parseToJsonElement(bodyText) as? JsonObject
-            objectValue?.stringOrEmpty("message")
-        }.getOrNull()
+    private fun authFailureMessage(status: HttpStatusCode): String {
+        return when (status) {
+            HttpStatusCode.BadRequest -> "Проверьте логин и пароль."
+            HttpStatusCode.Unauthorized -> "Неверный логин или пароль."
+            else -> "Не удалось выполнить вход или регистрацию."
+        }
     }
 
     private fun HttpStatusCode.isSuccess(): Boolean {

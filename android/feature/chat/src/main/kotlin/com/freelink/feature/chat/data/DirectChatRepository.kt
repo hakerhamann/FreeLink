@@ -166,7 +166,7 @@ class DirectChatRepository(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
-            DirectChatResult.Failure("Could not complete chat action.")
+            DirectChatResult.Failure("Не удалось выполнить действие в чате.")
         }
     }
 

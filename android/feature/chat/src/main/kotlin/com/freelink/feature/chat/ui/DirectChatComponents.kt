@@ -41,7 +41,7 @@ fun ChatHeader(
         )
         AssistChip(
             onClick = onRefresh,
-            label = { Text(if (isRefreshing) "Refreshing..." else "Refresh") }
+            label = { Text(if (isRefreshing) "Обновляем..." else "Обновить") }
         )
     }
 }
@@ -249,7 +249,7 @@ fun PendingAttachmentPreview(
                 AssistChip(
                     onClick = { onAttachmentActionSelected(action.id) },
                     enabled = !isAttaching,
-                    label = { Text(if (isAttaching) "Attaching..." else action.label) }
+                    label = { Text(if (isAttaching) "Прикрепляем..." else action.label) }
                 )
             }
             if (attachment != null) {

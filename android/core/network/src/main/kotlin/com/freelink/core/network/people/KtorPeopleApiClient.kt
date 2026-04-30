@@ -38,7 +38,7 @@ class KtorPeopleApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch people",
+                message = "Не удалось загрузить список людей.",
                 statusCode = response.status.value
             )
         }

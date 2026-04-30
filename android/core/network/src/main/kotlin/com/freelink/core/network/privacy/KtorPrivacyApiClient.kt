@@ -67,7 +67,7 @@ class KtorPrivacyApiClient(
     ): AuthApiResult<PrivacySettings> {
         if (!status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = extractErrorMessage(bodyText) ?: "Failed to sync privacy settings",
+                message = "Не удалось синхронизировать настройки приватности.",
                 statusCode = status.value
             )
         }
@@ -85,7 +85,7 @@ class KtorPrivacyApiClient(
 
         if (dto == null) {
             return AuthApiResult.Failure(
-                message = "Malformed privacy settings response",
+                message = "Сервер вернул некорректные настройки приватности.",
                 statusCode = status.value
             )
         }
