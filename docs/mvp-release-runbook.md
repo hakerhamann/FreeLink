@@ -7,7 +7,7 @@ This runbook defines the manual and automated gates for a safe FreeLink MVP rele
 - Target tag: `v1.0.0-mvp`.
 - Target branch: protected `main`.
 - Required environment: Local and Staging.
-- Required artifacts: Android debug/staging APK, backend API image, WS gateway image, worker image.
+- Required artifacts: Android debug/staging APK from CI artifact `freelink-debug-apk`, backend API image, WS gateway image, worker image.
 
 ## Go/No-Go Gates
 
@@ -46,6 +46,12 @@ This runbook defines the manual and automated gates for a safe FreeLink MVP rele
 4. Run Android auth, chat list, direct chat, media, privacy, archive and logout smoke.
 5. Exercise WS by opening a chat and sending typing/message events.
 6. Confirm logs contain no access tokens, refresh tokens, passwords, Authorization headers, or blob secrets.
+
+## APK Download
+
+- Local debug APK path after `./gradlew :android:app:assembleDebug`: `android/app/build/outputs/apk/debug/app-debug.apk`.
+- GitHub Actions artifact name: `freelink-debug-apk`.
+- Do not promote the APK if Sprint 7 regression gates or smoke checks fail.
 
 ## Rollback
 
