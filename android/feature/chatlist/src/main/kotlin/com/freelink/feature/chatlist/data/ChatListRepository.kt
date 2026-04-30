@@ -40,49 +40,55 @@ class ChatListRepository(
     }
 
     suspend fun syncChats(): ChatListResult<Unit> {
-        return when (
-            val result = authRepository.authorizedRequest { session ->
-                chatListApiClient.fetchChats(session.accessToken)
+        return safely {
+            when (
+                val result = authRepository.authorizedRequest { session ->
+                    chatListApiClient.fetchChats(session.accessToken)
+                }
+            ) {
+                is AuthRepositoryResult.Success -> {
+                    chatSummaryDao.clearAll()
+                    chatSummaryDao.upsertAll(result.value.map { it.toEntity() })
+                    ChatListResult.Success(Unit)
+                }
+                is AuthRepositoryResult.Failure -> ChatListResult.Failure(result.message)
             }
-        ) {
-            is AuthRepositoryResult.Success -> {
-                chatSummaryDao.clearAll()
-                chatSummaryDao.upsertAll(result.value.map { it.toEntity() })
-                ChatListResult.Success(Unit)
-            }
-            is AuthRepositoryResult.Failure -> ChatListResult.Failure(result.message)
         }
     }
 
     suspend fun syncPeople(): ChatListResult<Unit> {
-        return when (
-            val result = authRepository.authorizedRequest { session ->
-                peopleApiClient.fetchPeople(session.accessToken)
+        return safely {
+            when (
+                val result = authRepository.authorizedRequest { session ->
+                    peopleApiClient.fetchPeople(session.accessToken)
+                }
+            ) {
+                is AuthRepositoryResult.Success -> {
+                    personSummaryDao.clearAll()
+                    personSummaryDao.upsertAll(result.value.map { it.personToEntity() })
+                    ChatListResult.Success(Unit)
+                }
+                is AuthRepositoryResult.Failure -> ChatListResult.Failure(result.message)
             }
-        ) {
-            is AuthRepositoryResult.Success -> {
-                personSummaryDao.clearAll()
-                personSummaryDao.upsertAll(result.value.map { it.personToEntity() })
-                ChatListResult.Success(Unit)
-            }
-            is AuthRepositoryResult.Failure -> ChatListResult.Failure(result.message)
         }
     }
 
     suspend fun archiveChat(chatId: String): ChatListResult<Unit> {
-        return when (
-            val result = authRepository.authorizedRequest { session ->
-                chatListApiClient.archiveChat(
-                    accessToken = session.accessToken,
-                    chatId = chatId
-                )
+        return safely {
+            when (
+                val result = authRepository.authorizedRequest { session ->
+                    chatListApiClient.archiveChat(
+                        accessToken = session.accessToken,
+                        chatId = chatId
+                    )
+                }
+            ) {
+                is AuthRepositoryResult.Success -> {
+                    chatSummaryDao.deleteById(chatId)
+                    ChatListResult.Success(Unit)
+                }
+                is AuthRepositoryResult.Failure -> ChatListResult.Failure(result.message)
             }
-        ) {
-            is AuthRepositoryResult.Success -> {
-                chatSummaryDao.deleteById(chatId)
-                ChatListResult.Success(Unit)
-            }
-            is AuthRepositoryResult.Failure -> ChatListResult.Failure(result.message)
         }
     }
 
@@ -106,6 +112,18 @@ class ChatListRepository(
                 val backoffMs = (reconnectAttempt * 1_000L).coerceAtMost(5_000L)
                 delay(backoffMs)
             }
+        }
+    }
+
+    private suspend fun <T> safely(
+        block: suspend () -> ChatListResult<T>
+    ): ChatListResult<T> {
+        return try {
+            block()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            ChatListResult.Failure("Не удалось синхронизировать данные FreeLink.")
         }
     }
 }

@@ -43,7 +43,7 @@ private fun Long.toExpiryLabel(): String {
         .atZone(ZoneId.systemDefault())
         .toLocalTime()
         .format(timeFormatter)
-    return "Expires $expiryTime"
+    return "\u0418\u0441\u0447\u0435\u0437\u043d\u0435\u0442 \u0432 $expiryTime"
 }
 
 private fun String.extractFirstUrl(): String? {
@@ -52,12 +52,21 @@ private fun String.extractFirstUrl(): String? {
 
 private val urlPattern = Regex("""https?://\S+""")
 
+private fun AttachmentType.typeLabel(): String {
+    return when (this) {
+        AttachmentType.PHOTO -> "\u0424\u043e\u0442\u043e"
+        AttachmentType.VIDEO -> "\u0412\u0438\u0434\u0435\u043e"
+        AttachmentType.VOICE -> "\u0413\u043e\u043b\u043e\u0441"
+        AttachmentType.FILE -> "\u0424\u0430\u0439\u043b"
+    }
+}
+
 fun MediaAttachment.toUiModel(): DirectMessageAttachmentUiModel {
     val attachmentKind = type.toUiKind()
     return DirectMessageAttachmentUiModel(
         id = id,
         kind = attachmentKind,
-        typeLabel = type.name.lowercase().replaceFirstChar(Char::uppercase),
+        typeLabel = type.typeLabel(),
         fileName = fileName,
         sizeLabel = formatAttachmentSize(byteSize),
         downloadUrl = downloadUrl,
@@ -77,10 +86,10 @@ fun MediaAttachment.toUiModel(): DirectMessageAttachmentUiModel {
 
 private fun previewLabelFor(kind: DirectMessageAttachmentKindUiModel): String {
     return when (kind) {
-        DirectMessageAttachmentKindUiModel.PHOTO -> "Photo preview"
-        DirectMessageAttachmentKindUiModel.VIDEO -> "Video preview"
-        DirectMessageAttachmentKindUiModel.VOICE -> "Voice message"
-        DirectMessageAttachmentKindUiModel.FILE -> "File attachment"
+        DirectMessageAttachmentKindUiModel.PHOTO -> "\u041f\u0440\u0435\u0434\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440 \u0444\u043e\u0442\u043e"
+        DirectMessageAttachmentKindUiModel.VIDEO -> "\u041f\u0440\u0435\u0434\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440 \u0432\u0438\u0434\u0435\u043e"
+        DirectMessageAttachmentKindUiModel.VOICE -> "\u0413\u043e\u043b\u043e\u0441\u043e\u0432\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435"
+        DirectMessageAttachmentKindUiModel.FILE -> "\u0424\u0430\u0439\u043b"
     }
 }
 

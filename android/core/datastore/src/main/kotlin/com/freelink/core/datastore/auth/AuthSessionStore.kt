@@ -60,6 +60,9 @@ class AuthSessionStore(
     }
 
     companion object {
+        @Volatile
+        private var instance: AuthSessionStore? = null
+
         private object Keys {
             val userId = stringPreferencesKey("auth_user_id")
             val deviceId = stringPreferencesKey("auth_device_id")
@@ -69,10 +72,19 @@ class AuthSessionStore(
         }
 
         fun create(context: Context): AuthSessionStore {
-            val store = PreferenceDataStoreFactory.create {
-                context.preferencesDataStoreFile("freelink_auth_preferences")
+            return instance ?: synchronized(this) {
+                instance ?: buildStore(context.applicationContext).also { store ->
+                    instance = store
+                }
             }
-            return AuthSessionStore(store)
+        }
+
+        private fun buildStore(context: Context): AuthSessionStore {
+            return AuthSessionStore(
+                PreferenceDataStoreFactory.create {
+                    context.preferencesDataStoreFile("freelink_auth_preferences")
+                }
+            )
         }
     }
 }

@@ -87,7 +87,7 @@ private fun ChatListScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Chats",
+            text = "Чаты",
             style = MaterialTheme.typography.headlineSmall
         )
 
@@ -96,7 +96,7 @@ private fun ChatListScreen(
             onValueChange = onSearchQueryChanged,
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            label = { Text("Search chats and people") }
+            label = { Text("Поиск по чатам и людям") }
         )
 
         Row(
@@ -110,14 +110,14 @@ private fun ChatListScreen(
                     onCheckedChange = onUnreadOnlyChanged
                 )
                 Text(
-                    text = "Unread only",
+                    text = "Только непрочитанные",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
             AssistChip(
                 onClick = onRefresh,
-                label = { Text(if (state.isRefreshing) "Refreshing..." else "Refresh") }
+                label = { Text(if (state.isRefreshing) "Обновляем..." else "Обновить") }
             )
         }
 
@@ -146,7 +146,7 @@ private fun ChatListScreen(
         ) {
             if (state.pinnedChats.isNotEmpty()) {
                 item {
-                    SectionTitle(title = "Pinned")
+                    SectionTitle(title = "Закреплённые")
                 }
                 items(state.pinnedChats, key = { it.id }) { item ->
                     ChatListItem(
@@ -159,7 +159,7 @@ private fun ChatListScreen(
 
             if (state.otherChats.isNotEmpty()) {
                 item {
-                    SectionTitle(title = "All chats")
+                    SectionTitle(title = "Все чаты")
                 }
                 items(state.otherChats, key = { it.id }) { item ->
                     ChatListItem(
@@ -172,7 +172,7 @@ private fun ChatListScreen(
 
             if (state.peopleMatches.isNotEmpty()) {
                 item {
-                    SectionTitle(title = "People")
+                    SectionTitle(title = "Люди")
                 }
                 items(state.peopleMatches, key = { it.id }) { person ->
                     PersonSearchItem(item = person)

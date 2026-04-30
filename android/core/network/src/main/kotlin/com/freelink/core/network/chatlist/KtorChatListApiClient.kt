@@ -1,5 +1,7 @@
 package com.freelink.core.network.chatlist
 
+import com.freelink.core.network.NetworkEndpoints
+
 import com.freelink.core.model.domain.Chat
 import com.freelink.core.network.auth.AuthApiResult
 import com.freelink.core.network.chatlist.dto.ChatSummaryDto
@@ -23,7 +25,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorChatListApiClient(
-    private val baseUrl: String = "http://10.0.2.2:8080"
+    private val baseUrl: String = NetworkEndpoints.ApiBaseUrl
 ) : ChatListApiClient {
     private val client: HttpClient = defaultClient()
 
@@ -38,7 +40,7 @@ class KtorChatListApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch chats",
+                message = "Не удалось загрузить список чатов.",
                 statusCode = response.status.value
             )
         }
@@ -53,7 +55,7 @@ class KtorChatListApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch archived chats",
+                message = "Не удалось загрузить архив чатов.",
                 statusCode = response.status.value
             )
         }
@@ -71,7 +73,7 @@ class KtorChatListApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to archive chat",
+                message = "Не удалось перенести чат в архив.",
                 statusCode = response.status.value
             )
         }
@@ -89,7 +91,7 @@ class KtorChatListApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to restore archived chat",
+                message = "Не удалось восстановить чат из архива.",
                 statusCode = response.status.value
             )
         }

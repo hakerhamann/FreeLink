@@ -1,5 +1,7 @@
 package com.freelink.core.network.messages
 
+import com.freelink.core.network.NetworkEndpoints
+
 import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.Message
 import com.freelink.core.model.domain.MessageEnvelope
@@ -29,7 +31,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorMessageApiClient(
-    private val baseUrl: String = "http://10.0.2.2:8080"
+    private val baseUrl: String = NetworkEndpoints.ApiBaseUrl
 ) : MessageApiClient {
     private val client: HttpClient = defaultClient()
     private val json = Json {
@@ -51,7 +53,7 @@ class KtorMessageApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to fetch messages",
+                message = "Не удалось загрузить сообщения.",
                 statusCode = response.status.value
             )
         }
@@ -94,7 +96,7 @@ class KtorMessageApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to send message",
+                message = "Не удалось отправить сообщение.",
                 statusCode = response.status.value
             )
         }
@@ -102,7 +104,7 @@ class KtorMessageApiClient(
         val bodyText = response.body<String>()
         val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toMessageDto()
             ?: return AuthApiResult.Failure(
-                message = "Malformed message payload",
+                message = "Сервер вернул некорректное сообщение.",
                 statusCode = response.status.value
             )
         return AuthApiResult.Success(dto.toDomain())
@@ -128,7 +130,7 @@ class KtorMessageApiClient(
 
         if (!response.status.isSuccess()) {
             return AuthApiResult.Failure(
-                message = "Failed to set reaction",
+                message = "Не удалось поставить реакцию.",
                 statusCode = response.status.value
             )
         }
@@ -136,7 +138,7 @@ class KtorMessageApiClient(
         val bodyText = response.body<String>()
         val dto = (json.parseToJsonElement(bodyText) as? JsonObject)?.toMessageDto()
             ?: return AuthApiResult.Failure(
-                message = "Malformed reaction payload",
+                message = "Сервер вернул некорректную реакцию.",
                 statusCode = response.status.value
             )
         return AuthApiResult.Success(dto.toDomain())

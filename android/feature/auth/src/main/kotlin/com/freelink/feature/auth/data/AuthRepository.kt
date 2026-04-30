@@ -5,6 +5,7 @@ import com.freelink.core.model.domain.auth.AuthSession
 import com.freelink.core.model.domain.auth.DeviceSession
 import com.freelink.core.network.auth.AuthApiClient
 import com.freelink.core.network.auth.AuthApiResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
@@ -29,6 +30,51 @@ class AuthRepository(
     }
 
     suspend fun register(login: String, password: String): AuthRepositoryResult<AuthSession> {
+        return safely {
+            registerUnsafe(login, password)
+        }
+    }
+
+    suspend fun login(login: String, password: String): AuthRepositoryResult<AuthSession> {
+        return safely {
+            loginUnsafe(login, password)
+        }
+    }
+
+    suspend fun logout(): AuthRepositoryResult<Unit> {
+        return safely {
+            logoutUnsafe()
+        }
+    }
+
+    suspend fun loadDevices(): AuthRepositoryResult<List<DeviceSession>> {
+        return safely {
+            withAutoRefresh { session ->
+                apiClient.listDevices(session.accessToken)
+            }
+        }
+    }
+
+    suspend fun revokeDevice(deviceId: String): AuthRepositoryResult<Unit> {
+        return safely {
+            withAutoRefresh { session ->
+                apiClient.revokeDevice(
+                    accessToken = session.accessToken,
+                    deviceId = deviceId
+                )
+            }
+        }
+    }
+
+    suspend fun <T> authorizedRequest(
+        request: suspend (session: AuthSession) -> AuthApiResult<T>
+    ): AuthRepositoryResult<T> {
+        return safely {
+            withAutoRefresh(request)
+        }
+    }
+
+    private suspend fun registerUnsafe(login: String, password: String): AuthRepositoryResult<AuthSession> {
         return when (
             val result = apiClient.register(
                 login = login,
@@ -44,7 +90,7 @@ class AuthRepository(
         }
     }
 
-    suspend fun login(login: String, password: String): AuthRepositoryResult<AuthSession> {
+    private suspend fun loginUnsafe(login: String, password: String): AuthRepositoryResult<AuthSession> {
         return when (
             val result = apiClient.login(
                 login = login,
@@ -60,7 +106,7 @@ class AuthRepository(
         }
     }
 
-    suspend fun logout(): AuthRepositoryResult<Unit> {
+    private suspend fun logoutUnsafe(): AuthRepositoryResult<Unit> {
         val refreshToken = sessionStore.sessionFlow.first()?.refreshToken
             ?: return AuthRepositoryResult.Success(Unit)
 
@@ -71,27 +117,6 @@ class AuthRepository(
             is AuthApiResult.Success -> AuthRepositoryResult.Success(Unit)
             is AuthApiResult.Failure -> AuthRepositoryResult.Failure(result.message)
         }
-    }
-
-    suspend fun loadDevices(): AuthRepositoryResult<List<DeviceSession>> {
-        return withAutoRefresh { session ->
-            apiClient.listDevices(session.accessToken)
-        }
-    }
-
-    suspend fun revokeDevice(deviceId: String): AuthRepositoryResult<Unit> {
-        return withAutoRefresh { session ->
-            apiClient.revokeDevice(
-                accessToken = session.accessToken,
-                deviceId = deviceId
-            )
-        }
-    }
-
-    suspend fun <T> authorizedRequest(
-        request: suspend (session: AuthSession) -> AuthApiResult<T>
-    ): AuthRepositoryResult<T> {
-        return withAutoRefresh(request)
     }
 
     private suspend fun <T> withAutoRefresh(
@@ -129,6 +154,18 @@ class AuthRepository(
                 sessionStore.clear()
                 null
             }
+        }
+    }
+
+    private suspend fun <T> safely(
+        block: suspend () -> AuthRepositoryResult<T>
+    ): AuthRepositoryResult<T> {
+        return try {
+            block()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            AuthRepositoryResult.Failure("Не удалось подключиться к серверу FreeLink.")
         }
     }
 }
