@@ -37,18 +37,9 @@ class PeopleViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
             when (val result = repository.syncPeople()) {
-                is PeopleResult.Success -> {
-                    _uiState.update { it.copy(isRefreshing = false, errorMessage = null) }
-                }
-
-                is PeopleResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isRefreshing = false,
-                            errorMessage = result.message
-                        )
-                    }
+                is PeopleResult.Success -> _uiState.update { it.copy(isRefreshing = false, errorMessage = null) }
+                is PeopleResult.Failure -> _uiState.update {
+                    it.copy(isLoading = false, isRefreshing = false, errorMessage = result.message)
                 }
             }
         }
@@ -62,8 +53,7 @@ class PeopleViewModel(
                 } else {
                     val normalized = query.trim().lowercase()
                     people.filter {
-                        it.displayName.lowercase().contains(normalized) ||
-                            it.login.lowercase().contains(normalized)
+                        it.displayName.lowercase().contains(normalized) || it.login.lowercase().contains(normalized)
                     }
                 }
             }.collect { filtered ->
@@ -72,7 +62,7 @@ class PeopleViewModel(
                     it.copy(
                         isLoading = false,
                         people = mapped,
-                        emptyStateMessage = if (mapped.isEmpty()) "No people found" else null
+                        emptyStateMessage = if (mapped.isEmpty()) "Люди не найдены" else null
                     )
                 }
             }
@@ -80,12 +70,8 @@ class PeopleViewModel(
     }
 
     companion object {
-        fun factory(repository: PeopleRepository): ViewModelProvider.Factory {
-            return viewModelFactory {
-                initializer {
-                    PeopleViewModel(repository)
-                }
-            }
+        fun factory(repository: PeopleRepository): ViewModelProvider.Factory = viewModelFactory {
+            initializer { PeopleViewModel(repository) }
         }
     }
 }

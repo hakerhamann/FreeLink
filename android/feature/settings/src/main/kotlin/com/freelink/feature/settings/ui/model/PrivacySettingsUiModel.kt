@@ -12,14 +12,8 @@ enum class WhoCanMessageUiOption(
     val backendValue: String,
     val title: String
 ) {
-    EVERYONE(
-        backendValue = "everyone",
-        title = "Everyone"
-    ),
-    TRUSTED_CONTACTS(
-        backendValue = "trusted_contacts",
-        title = "Trusted only"
-    );
+    EVERYONE("everyone", "Все"),
+    TRUSTED_CONTACTS("trusted_contacts", "Только близкие");
 
     companion object {
         fun fromBackendValue(value: String): WhoCanMessageUiOption {

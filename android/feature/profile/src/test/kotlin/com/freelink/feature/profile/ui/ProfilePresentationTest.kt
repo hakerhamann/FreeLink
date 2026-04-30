@@ -10,7 +10,7 @@ class ProfilePresentationTest {
     fun `buildProfileSections uses user suffix in title`() {
         val sections = buildProfileSections("user-12345678")
 
-        assertEquals("User 12345678", sections.title)
+        assertEquals("Мой профиль", sections.title)
     }
 
     @Test

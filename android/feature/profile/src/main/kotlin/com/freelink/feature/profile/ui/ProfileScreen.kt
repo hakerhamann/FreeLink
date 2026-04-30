@@ -40,115 +40,42 @@ internal fun ProfileScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = state.title,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = state.subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
-            )
+            Text(state.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Text(state.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f))
         }
 
-        ProfileSectionCard(
-            title = "Secure session",
-            trailing = if (state.isSessionAvailable) "Protected" else "Offline"
-        ) {
+        ProfileSectionCard(title = "Защищённая сессия", trailing = if (state.isSessionAvailable) "Активна" else "Не в сети") {
             Text(
                 text = if (state.isSessionAvailable) {
-                    "Current device ${state.deviceId.orEmpty().takeLast(6)} is linked to your private account context."
+                    "Текущее устройство ${state.deviceId.orEmpty().takeLast(6)} связано с приватным аккаунтом."
                 } else {
-                    "Session details will appear here after sign in."
+                    "Детали сессии появятся после входа."
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary
             )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onOpenPrivacySettings,
-                    modifier = Modifier.weight(1f),
-                    enabled = !state.isLoggingOut
-                ) {
-                    Text("Privacy")
-                }
-                OutlinedButton(
-                    onClick = onOpenDevices,
-                    modifier = Modifier.weight(1f),
-                    enabled = !state.isLoggingOut
-                ) {
-                    Text("Devices")
-                }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(onClick = onOpenPrivacySettings, modifier = Modifier.weight(1f), enabled = !state.isLoggingOut) { Text("Приватность") }
+                OutlinedButton(onClick = onOpenDevices, modifier = Modifier.weight(1f), enabled = !state.isLoggingOut) { Text("Устройства") }
             }
         }
 
-        ProfileSectionCard(
-            title = "Shared chats",
-            trailing = "All"
-        ) {
-            state.sharedChats.forEach { item ->
-                SharedChatRow(item)
-            }
-        }
-
-        ProfileSectionCard(
-            title = "Shared photos",
-            trailing = state.sharedPhotos.size.toString()
-        ) {
+        ProfileSectionCard(title = "Общие чаты", trailing = "Все") { state.sharedChats.forEach { SharedChatRow(it) } }
+        ProfileSectionCard(title = "Общие чаты", trailing = state.sharedPhotos.size.toString()) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(state.sharedPhotos, key = { it.id }) { item ->
-                    SharedPhotoTile(
-                        item = item,
-                        modifier = Modifier
-                    )
-                }
+                items(state.sharedPhotos, key = { it.id }) { SharedPhotoTile(it) }
             }
-            OutlinedButton(
-                onClick = onOpenMediaGallery,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isLoggingOut
-            ) {
-                Text("Open media gallery")
-            }
+            OutlinedButton(onClick = onOpenMediaGallery, modifier = Modifier.fillMaxWidth(), enabled = !state.isLoggingOut) { Text("Открыть медиагалерею") }
         }
-
-        ProfileSectionCard(
-            title = "Trusted contacts",
-            trailing = state.trustedContacts.size.toString()
-        ) {
-            state.trustedContacts.forEach { item ->
-                TrustedContactRow(item)
-            }
+        ProfileSectionCard(title = "Близкие люди", trailing = state.trustedContacts.size.toString()) {
+            state.trustedContacts.forEach { TrustedContactRow(it) }
         }
-
-        ProfileSectionCard(
-            title = "Pinned messages",
-            trailing = state.pinnedMessages.size.toString()
-        ) {
-            state.pinnedMessages.forEach { item ->
-                PinnedMessageRow(item)
-            }
+        ProfileSectionCard(title = "Прикреплённые сообщения", trailing = state.pinnedMessages.size.toString()) {
+            state.pinnedMessages.forEach { PinnedMessageRow(it) }
         }
-
-        if (state.errorMessage != null) {
-            Text(
-                text = state.errorMessage,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        Button(
-            onClick = onLogout,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isLoggingOut
-        ) {
-            Text(if (state.isLoggingOut) "Logging out..." else "Logout")
+        if (state.errorMessage != null) Text(state.errorMessage, color = MaterialTheme.colorScheme.error)
+        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth(), enabled = !state.isLoggingOut) {
+            Text(if (state.isLoggingOut) "Выходим..." else "Выйти")
         }
     }
 }

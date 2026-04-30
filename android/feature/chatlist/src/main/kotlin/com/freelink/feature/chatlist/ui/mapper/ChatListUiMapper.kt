@@ -17,8 +17,8 @@ fun Chat.toUiModel(): ChatListItemUiModel {
 
     return ChatListItemUiModel(
         id = id,
-        title = title,
-        lastMessagePreview = lastMessagePreview,
+        title = title.localizedChatTitle(),
+        lastMessagePreview = lastMessagePreview.localizedPreview(),
         unreadCount = unreadCount,
         unreadBadge = when {
             unreadCount <= 0 -> null
@@ -27,6 +27,24 @@ fun Chat.toUiModel(): ChatListItemUiModel {
         },
         isPinned = isPinned,
         updatedAtLabel = updatedAt,
-        chatTypeLabel = if (type == ChatType.DIRECT) "Direct" else "Group"
+        chatTypeLabel = if (type == ChatType.DIRECT) "личный" else "группа"
     )
+}
+
+private fun String.localizedChatTitle(): String = when (this) {
+    "Family" -> "Семья"
+    "Lera" -> "Лера"
+    "Artem" -> "Артём"
+    "Work group" -> "Рабочая группа"
+    "Travels" -> "Путешествия"
+    "Weekend plans" -> "Планы на выходные"
+    else -> this
+}
+
+private fun String.localizedPreview(): String = when (this) {
+    "Do not forget dinner on Saturday." -> "Не забудьте, в субботу ужин у нас дома."
+    "Thanks for your support." -> "Спасибо за поддержку, ты лучшая!"
+    "I uploaded files to Space." -> "Скинул файлы в пространство."
+    "Great, accepted." -> "Отлично, принято."
+    else -> this
 }
