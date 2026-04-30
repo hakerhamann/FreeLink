@@ -56,12 +56,12 @@ internal fun SettingsScreen(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Menu",
+                    text = "Меню",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Privacy controls and secure defaults",
+                    text = "Настройки приватности и защиты",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
                 )
@@ -76,55 +76,55 @@ internal fun SettingsScreen(
         ) {
             Text(
                 text = if (state.isSessionAvailable) {
-                    "Secure session is active on this device."
+                    "Защищённая сессия активна на этом устройстве."
                 } else {
-                    "Sign in to sync protected devices and privacy preferences."
+                    "Войдите, чтобы синхронизировать устройства и приватность."
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary
             )
 
             SettingsActionRow(
-                title = "Active devices",
-                subtitle = "Manage current sessions and revoke old ones",
-                trailing = "Open",
+                title = "Активные устройства",
+                subtitle = "Управление сессиями и отзыв старых устройств",
+                trailing = "Открыть",
                 enabled = controlsEnabled,
                 onClick = onOpenDevices
             )
         }
 
         SettingsSectionCard(
-            title = "Privacy and encryption",
-            subtitle = "Core protection settings from the MVP security baseline"
+            title = "Приватность и шифрование",
+            subtitle = "Базовые настройки защиты безопасного MVP"
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator()
             }
 
             SettingsSwitchRow(
-                title = "Hidden mode",
-                subtitle = "Hide content in recent apps and system previews",
+                title = "Скрытый режим",
+                subtitle = "Скрывать контент в недавних приложениях и системных превью",
                 checked = state.settings.hiddenModeEnabled,
                 enabled = controlsEnabled,
                 onCheckedChange = onHiddenModeChanged
             )
             SettingsSwitchRow(
-                title = "Biometric lock",
-                subtitle = "Require biometrics to reopen the app",
+                title = "Биометрическая блокировка",
+                subtitle = "Требовать биометрию при повторном открытии приложения",
                 checked = state.settings.biometricLockRequired,
                 enabled = controlsEnabled,
                 onCheckedChange = onBiometricLockChanged
             )
             SettingsSwitchRow(
-                title = "Disappearing messages",
-                subtitle = "Expire new messages after 24 hours",
+                title = "Исчезающие сообщения",
+                subtitle = "Удалять новые сообщения через 24 часа",
                 checked = state.settings.disappearingMessagesEnabled,
                 enabled = controlsEnabled,
                 onCheckedChange = onDisappearingMessagesChanged
             )
             SettingsSwitchRow(
-                title = "Link previews",
-                subtitle = "Allow metadata previews for shared links",
+                title = "Предпросмотр ссылок",
+                subtitle = "Показывать превью для отправленных ссылок",
                 checked = state.settings.linkPreviewEnabled,
                 enabled = controlsEnabled,
                 onCheckedChange = onLinkPreviewChanged
@@ -132,7 +132,7 @@ internal fun SettingsScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Who can message me",
+                    text = "Кто может писать",
                     style = MaterialTheme.typography.titleSmall
                 )
                 WhoCanMessageChips(
@@ -144,7 +144,7 @@ internal fun SettingsScreen(
 
             if (state.isSaving) {
                 Text(
-                    text = "Saving settings...",
+                    text = "Сохраняем настройки...",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -152,32 +152,32 @@ internal fun SettingsScreen(
         }
 
         SettingsSectionCard(
-            title = "App and data",
-            subtitle = "Navigation targets for nearby settings that follow in later sprints"
+            title = "Приложение и данные",
+            subtitle = "Ближайшие разделы настроек из следующих итераций"
         ) {
             SettingsActionRow(
-                title = "Notifications",
-                subtitle = "Sounds, vibration and badge preferences",
-                trailing = "Soon",
+                title = "Уведомления",
+                subtitle = "Звуки, вибрация и счётчики",
+                trailing = "Выйти",
                 enabled = false
             )
             SettingsActionRow(
-                title = "Appearance",
-                subtitle = "Theme, atmosphere and chat visuals",
-                trailing = "Soon",
+                title = "Внешний вид",
+                subtitle = "Тема, атмосфера и оформление чатов",
+                trailing = "Выйти",
                 enabled = false
             )
             SettingsActionRow(
-                title = "Archive",
-                subtitle = "Archived chats and protected history access",
-                trailing = "Open",
+                title = "Выйти",
+                subtitle = "Архивные чаты и защищённая история",
+                trailing = "Открыть",
                 enabled = controlsEnabled,
                 onClick = onOpenArchive
             )
             SettingsActionRow(
-                title = "Media library",
-                subtitle = "Shared photos, files and voice attachments",
-                trailing = "Sprint 5",
+                title = "Медиатека",
+                subtitle = "Фото, файлы и голосовые вложения",
+                trailing = "Спринт 5",
                 enabled = false
             )
         }
@@ -195,7 +195,7 @@ internal fun SettingsScreen(
             enabled = controlsEnabled,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Refresh settings")
+            Text("Обновить настройки")
         }
 
         Button(
@@ -203,7 +203,7 @@ internal fun SettingsScreen(
             enabled = controlsEnabled,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (state.isLoggingOut) "Logging out..." else "Logout")
+            Text(if (state.isLoggingOut) "Выходим..." else "Выйти")
         }
     }
 }
@@ -219,7 +219,7 @@ private fun PrivacyLevelChip(label: String) {
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Text(
-            text = "Privacy: $label",
+            text = "Приватность: $label",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary
         )

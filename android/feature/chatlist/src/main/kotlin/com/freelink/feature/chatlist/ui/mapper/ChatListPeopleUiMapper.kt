@@ -6,9 +6,17 @@ import com.freelink.feature.chatlist.ui.model.ChatListPersonUiModel
 fun User.toChatListPersonUiModel(): ChatListPersonUiModel {
     return ChatListPersonUiModel(
         id = id,
-        displayName = displayName,
+        displayName = displayName.localizedName(),
         login = "@$login",
-        status = if (isOnline) "online" else "offline",
+        status = if (isOnline) "в сети" else "не в сети",
         isOnline = isOnline
     )
+}
+
+private fun String.localizedName(): String = when (this) {
+    "Lera" -> "Лера"
+    "Artem" -> "Артём"
+    "Masha" -> "Маша"
+    "Ilya" -> "Илья"
+    else -> this
 }

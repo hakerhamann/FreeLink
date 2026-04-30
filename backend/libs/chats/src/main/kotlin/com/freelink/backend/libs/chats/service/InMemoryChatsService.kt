@@ -2,112 +2,97 @@ package com.freelink.backend.libs.chats.service
 
 import com.freelink.backend.libs.chats.domain.ChatSummary
 import com.freelink.backend.libs.chats.domain.ChatType
-import java.util.concurrent.ConcurrentHashMap
+import java.time.Instant
 
 class InMemoryChatsService : ChatsService {
-    private val chatsByUserId = ConcurrentHashMap<String, List<ChatSummary>>()
-    private val archivedChatIdsByUserId = ConcurrentHashMap<String, MutableSet<String>>()
+    private val chatsByUser = mutableMapOf<String, MutableList<ChatSummary>>()
+    private val archivedByUser = mutableMapOf<String, MutableList<ChatSummary>>()
 
     override fun listChats(userId: String, query: String?, unreadOnly: Boolean): List<ChatSummary> {
-        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
+        val chats = chatsByUser.getOrPut(userId) { seedChats().toMutableList() }
         val normalizedQuery = query?.trim()?.lowercase().orEmpty()
-        val archivedChatIds = archivedChatIdsByUserId[userId].orEmpty()
-
-        return source
+        return chats
             .asSequence()
-            .filterNot { chat -> chat.id in archivedChatIds }
+            .filter { chat -> !unreadOnly || chat.unreadCount > 0 }
             .filter { chat ->
-                if (normalizedQuery.isBlank()) {
-                    true
-                } else {
+                normalizedQuery.isBlank() ||
                     chat.title.lowercase().contains(normalizedQuery) ||
-                        chat.lastMessagePreview.lowercase().contains(normalizedQuery)
-                }
-            }
-            .filter { chat ->
-                if (unreadOnly) chat.unreadCount > 0 else true
+                    chat.lastMessagePreview.lowercase().contains(normalizedQuery)
             }
             .sortedWith(compareByDescending<ChatSummary> { it.isPinned }.thenByDescending { it.updatedAtEpochMs })
             .toList()
     }
 
+
     override fun isKnownChat(userId: String, chatId: String): Boolean {
-        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
-        val normalizedChatId = chatId.trim()
-        return source.any { it.id == normalizedChatId }
+        return chatsByUser.getOrPut(userId) { seedChats().toMutableList() }.any { it.id == chatId } ||
+            archivedByUser[userId].orEmpty().any { it.id == chatId }
     }
 
     override fun archiveChat(userId: String, chatId: String): Boolean {
-        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
-        val normalizedChatId = chatId.trim()
-        if (source.none { it.id == normalizedChatId }) {
-            return false
-        }
-
-        val archivedChatIds = archivedChatIdsByUserId.computeIfAbsent(userId) { linkedSetOf() }
-        archivedChatIds.add(normalizedChatId)
+        val chats = chatsByUser.getOrPut(userId) { seedChats().toMutableList() }
+        val chat = chats.firstOrNull { it.id == chatId } ?: return false
+        chats.remove(chat)
+        archivedByUser.getOrPut(userId) { mutableListOf() }.add(chat.copy(isPinned = false))
         return true
     }
 
-    override fun restoreArchivedChat(userId: String, chatId: String): Boolean {
-        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
-        val normalizedChatId = chatId.trim()
-        if (source.none { it.id == normalizedChatId }) {
-            return false
-        }
-
-        val archivedChatIds = archivedChatIdsByUserId[userId] ?: return false
-        return archivedChatIds.remove(normalizedChatId)
-    }
-
     override fun listArchivedChats(userId: String): List<ChatSummary> {
-        val source = chatsByUserId.computeIfAbsent(userId) { buildSeedChats() }
-        val archivedChatIds = archivedChatIdsByUserId[userId].orEmpty()
-
-        return source
-            .asSequence()
-            .filter { chat -> chat.id in archivedChatIds }
-            .sortedByDescending { it.updatedAtEpochMs }
-            .toList()
+        return archivedByUser[userId].orEmpty().sortedByDescending { it.updatedAtEpochMs }
     }
 
-    private fun buildSeedChats(): List<ChatSummary> {
-        val now = System.currentTimeMillis()
+    override fun restoreArchivedChat(userId: String, chatId: String): Boolean {
+        val archived = archivedByUser[userId] ?: return false
+        val chat = archived.firstOrNull { it.id == chatId } ?: return false
+        archived.remove(chat)
+        chatsByUser.getOrPut(userId) { seedChats().toMutableList() }.add(chat)
+        return true
+    }
+
+    fun upsertLastMessage(userId: String, chatId: String, preview: String, at: Long = Instant.now().toEpochMilli()) {
+        val chats = chatsByUser.getOrPut(userId) { seedChats().toMutableList() }
+        val index = chats.indexOfFirst { it.id == chatId }
+        if (index >= 0) {
+            chats[index] = chats[index].copy(lastMessagePreview = preview, updatedAtEpochMs = at)
+        }
+    }
+
+    private fun seedChats(now: Long = Instant.now().toEpochMilli()): List<ChatSummary> {
         return listOf(
             ChatSummary(
                 id = "chat-family",
-                title = "Family",
-                lastMessagePreview = "Do not forget dinner on Saturday.",
+                title = "Семья",
+                lastMessagePreview = "Не забудьте, в субботу ужин у нас дома.",
                 unreadCount = 3,
                 isPinned = true,
-                updatedAtEpochMs = now - 60_000,
+                updatedAtEpochMs = now - 300_000,
                 type = ChatType.GROUP
             ),
             ChatSummary(
                 id = "chat-lera",
-                title = "Lera",
-                lastMessagePreview = "Thanks for your support.",
+                title = "Лера",
+                lastMessagePreview = "Спасибо за поддержку, ты лучшая!",
                 unreadCount = 2,
                 isPinned = false,
-                updatedAtEpochMs = now - 120_000,
+                updatedAtEpochMs = now - 360_000,
                 type = ChatType.DIRECT
             ),
             ChatSummary(
                 id = "chat-artem",
-                title = "Artem",
-                lastMessagePreview = "I uploaded files to Space.",
+                title = "Артём",
+                lastMessagePreview = "Скинул файлы в пространство.",
                 unreadCount = 1,
                 isPinned = false,
-                updatedAtEpochMs = now - 300_000,
+                updatedAtEpochMs = now - 540_000,
                 type = ChatType.DIRECT
             ),
             ChatSummary(
                 id = "chat-work",
-                title = "Work group",
-                lastMessagePreview = "Great, accepted.",
+                title = "Рабочая группа",
+                lastMessagePreview = "Отлично, принято.",
                 unreadCount = 0,
                 isPinned = false,
-                updatedAtEpochMs = now - 600_000,
+                updatedAtEpochMs = now - 840_000,
                 type = ChatType.GROUP
             )
         )

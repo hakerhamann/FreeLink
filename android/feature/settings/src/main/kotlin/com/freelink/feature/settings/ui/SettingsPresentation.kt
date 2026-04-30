@@ -8,26 +8,21 @@ internal fun SettingsUiState.privacyLevelLabel(): String {
     ).count { it }
 
     return when {
-        enabledCount >= 2 -> "High"
-        enabledCount == 1 -> "Balanced"
-        else -> "Standard"
+        enabledCount >= 2 -> "высокая"
+        enabledCount == 1 -> "сбалансированная"
+        else -> "стандартная"
     }
 }
 
 internal fun SettingsUiState.profileTitle(): String {
-    val rawUserId = userId?.trim().orEmpty()
-    if (rawUserId.isBlank()) {
-        return "Protected profile"
-    }
-
-    return "User ${rawUserId.takeLast(8)}"
+    return if (userId.isNullOrBlank()) "Защищённый профиль" else "Мой профиль"
 }
 
 internal fun SettingsUiState.profileSubtitle(): String {
     val rawDeviceId = deviceId?.trim().orEmpty()
-    if (rawDeviceId.isBlank()) {
-        return "Secure session details will appear after sign in."
+    return if (rawDeviceId.isBlank()) {
+        "Детали защищённой сессии появятся после входа."
+    } else {
+        "Текущее устройство ${rawDeviceId.takeLast(6)} защищено приватными настройками."
     }
-
-    return "Current device ${rawDeviceId.takeLast(6)} is protected by private defaults."
 }

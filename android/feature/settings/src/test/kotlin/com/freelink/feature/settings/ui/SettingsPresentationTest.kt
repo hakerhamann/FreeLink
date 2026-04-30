@@ -19,7 +19,7 @@ class SettingsPresentationTest {
             )
         )
 
-        assertEquals("High", state.privacyLevelLabel())
+        assertEquals("высокая", state.privacyLevelLabel())
     }
 
     @Test
@@ -27,7 +27,7 @@ class SettingsPresentationTest {
         val state = SettingsUiState(deviceId = "device-abcdef")
 
         assertEquals(
-            "Current device abcdef is protected by private defaults.",
+            "Текущее устройство abcdef защищено приватными настройками.",
             state.profileSubtitle()
         )
     }

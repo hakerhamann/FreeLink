@@ -76,7 +76,7 @@ class InMemoryGroupsService : GroupsService {
             id = groupId,
             title = command.title.trim(),
             memberRoles = roles,
-            lastMessagePreview = "Group created",
+            lastMessagePreview = "Группа создана",
             updatedAtEpochMs = now
         )
         groupsById[groupId] = stored
@@ -101,26 +101,26 @@ class InMemoryGroupsService : GroupsService {
         putSeed(
             StoredGroup(
                 id = "group-family-${userId.takeLast(4)}",
-                title = "Family",
+                title = "Семья",
                 memberRoles = linkedMapOf(
                     userId to GroupRole.OWNER,
                     "user-lera" to GroupRole.MEMBER,
                     "user-artem" to GroupRole.MEMBER
                 ),
-                lastMessagePreview = "Dinner on Saturday at 20:00",
+                lastMessagePreview = "Ужин в субботу в 20:00",
                 updatedAtEpochMs = now - 60_000
             )
         )
         putSeed(
             StoredGroup(
                 id = "group-weekend-${userId.takeLast(4)}",
-                title = "Weekend plans",
+                title = "Планы на выходные",
                 memberRoles = linkedMapOf(
                     userId to GroupRole.ADMIN,
                     "user-masha" to GroupRole.OWNER,
                     "user-ilya" to GroupRole.MEMBER
                 ),
-                lastMessagePreview = "Let's pick a movie for tonight.",
+                lastMessagePreview = "Давайте выберем фильм на вечер.",
                 updatedAtEpochMs = now - 180_000
             )
         )
@@ -132,14 +132,14 @@ class InMemoryGroupsService : GroupsService {
 
     private fun memberDisplayName(memberUserId: String, currentUserId: String): String {
         if (memberUserId == currentUserId) {
-            return "You"
+            return "Вы"
         }
 
         return when (memberUserId) {
-            "user-lera" -> "Lera"
-            "user-artem" -> "Artem"
-            "user-masha" -> "Masha"
-            "user-ilya" -> "Ilya"
+            "user-lera" -> "Лера"
+            "user-artem" -> "Артём"
+            "user-masha" -> "Маша"
+            "user-ilya" -> "Илья"
             else -> memberUserId.takeLast(8)
         }
     }
