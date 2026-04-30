@@ -1,4 +1,6 @@
-﻿package com.freelink.core.network.auth
+package com.freelink.core.network.auth
+
+import com.freelink.core.network.NetworkEndpoints
 
 import com.freelink.core.model.domain.auth.AuthSession
 import com.freelink.core.model.domain.auth.DeviceSession
@@ -23,7 +25,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorAuthApiClient(
-    private val baseUrl: String = "http://10.0.2.2:8080"
+    private val baseUrl: String = NetworkEndpoints.ApiBaseUrl
 ) : AuthApiClient {
     private val client: HttpClient = defaultClient()
 

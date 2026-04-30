@@ -1,5 +1,7 @@
 package com.freelink.core.network.privacy
 
+import com.freelink.core.network.NetworkEndpoints
+
 import com.freelink.core.model.domain.PrivacySettings
 import com.freelink.core.network.auth.AuthApiResult
 import com.freelink.core.network.privacy.dto.PrivacySettingsDto
@@ -24,7 +26,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorPrivacyApiClient(
-    private val baseUrl: String = "http://10.0.2.2:8080"
+    private val baseUrl: String = NetworkEndpoints.ApiBaseUrl
 ) : PrivacyApiClient {
     private val client: HttpClient = defaultClient()
 

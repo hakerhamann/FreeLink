@@ -1,5 +1,7 @@
 package com.freelink.core.network.messages.ws
 
+import com.freelink.core.network.NetworkEndpoints
+
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -17,7 +19,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorDirectChatWsEventsClient(
-    private val wsUrl: String = "ws://10.0.2.2:8081/ws/messages"
+    private val wsUrl: String = NetworkEndpoints.DirectChatWsUrl
 ) : DirectChatWsEventsClient {
     private val client: HttpClient = defaultClient()
     private val json = Json { ignoreUnknownKeys = true }

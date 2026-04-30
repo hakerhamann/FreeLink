@@ -1,5 +1,7 @@
 package com.freelink.core.network.groups
 
+import com.freelink.core.network.NetworkEndpoints
+
 import com.freelink.core.model.domain.GroupDetails
 import com.freelink.core.model.domain.GroupSummary
 import com.freelink.core.network.auth.AuthApiResult
@@ -27,7 +29,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorGroupApiClient(
-    private val baseUrl: String = "http://10.0.2.2:8080"
+    private val baseUrl: String = NetworkEndpoints.ApiBaseUrl
 ) : GroupApiClient {
     private val client: HttpClient = defaultClient()
     private val json = Json {

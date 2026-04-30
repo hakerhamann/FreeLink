@@ -1,5 +1,7 @@
 package com.freelink.core.network.people
 
+import com.freelink.core.network.NetworkEndpoints
+
 import com.freelink.core.model.domain.User
 import com.freelink.core.network.auth.AuthApiResult
 import com.freelink.core.network.people.dto.PersonSummaryDto
@@ -21,7 +23,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorPeopleApiClient(
-    private val baseUrl: String = "http://10.0.2.2:8080"
+    private val baseUrl: String = NetworkEndpoints.ApiBaseUrl
 ) : PeopleApiClient {
     private val client: HttpClient = defaultClient()
 

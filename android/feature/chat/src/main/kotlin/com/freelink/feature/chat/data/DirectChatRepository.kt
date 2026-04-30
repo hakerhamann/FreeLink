@@ -1,9 +1,10 @@
-package com.freelink.feature.chat.data
+﻿package com.freelink.feature.chat.data
 
+import com.freelink.core.encryption.MessageEnvelopeFactory
 import com.freelink.core.model.domain.AttachmentType
 import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.Message
-import com.freelink.core.encryption.MessageEnvelopeFactory
+import com.freelink.core.network.auth.AuthApiResult
 import com.freelink.core.network.media.MediaApiClient
 import com.freelink.core.network.media.mapper.toAttachment
 import com.freelink.core.network.messages.MessageApiClient
@@ -31,16 +32,18 @@ class DirectChatRepository(
     }
 
     suspend fun loadMessages(chatId: String): DirectChatResult<List<Message>> {
-        return when (
-            val result = authRepository.authorizedRequest { session ->
-                messageApiClient.fetchMessages(
-                    accessToken = session.accessToken,
-                    chatId = chatId
-                )
+        return safely {
+            when (
+                val result = authRepository.authorizedRequest { session ->
+                    messageApiClient.fetchMessages(
+                        accessToken = session.accessToken,
+                        chatId = chatId
+                    )
+                }
+            ) {
+                is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
+                is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
             }
-        ) {
-            is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
-            is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
         }
     }
 
@@ -50,86 +53,120 @@ class DirectChatRepository(
         attachment: MediaAttachment? = null,
         replyToMessageId: String? = null
     ): DirectChatResult<Message> {
-        return when (
-            val result = authRepository.authorizedRequest { session ->
-                val envelope = messageEnvelopeFactory.create(
-                    conversationId = chatId,
-                    senderDeviceId = session.deviceId,
-                    plaintextBody = body
-                )
-                messageApiClient.sendMessage(
-                    accessToken = session.accessToken,
-                    chatId = chatId,
-                    body = body,
-                    attachment = attachment,
-                    envelope = envelope,
-                    replyToMessageId = replyToMessageId
-                )
+        return safely {
+            when (
+                val result = authRepository.authorizedRequest { session ->
+                    val envelope = messageEnvelopeFactory.create(
+                        conversationId = chatId,
+                        senderDeviceId = session.deviceId,
+                        plaintextBody = body
+                    )
+                    messageApiClient.sendMessage(
+                        accessToken = session.accessToken,
+                        chatId = chatId,
+                        body = body,
+                        attachment = attachment,
+                        envelope = envelope,
+                        replyToMessageId = replyToMessageId
+                    )
+                }
+            ) {
+                is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
+                is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
             }
-        ) {
-            is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
-            is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
         }
     }
 
     suspend fun uploadSampleAttachment(chatId: String): DirectChatResult<MediaAttachment> {
-        return when (
-            val result = authRepository.authorizedRequest { session ->
-                val preset = sampleAttachmentPreset(chatId, attachmentType = AttachmentType.PHOTO)
-                val init = mediaApiClient.initUpload(
-                    accessToken = session.accessToken,
-                    fileName = preset.fileName,
-                    mimeType = preset.mimeType,
-                    digestSha256 = preset.digestSha256,
-                    byteSize = preset.byteSize,
-                    attachmentType = preset.attachmentType
-                )
-                when (init) {
-                    is com.freelink.core.network.auth.AuthApiResult.Failure -> init
-                    is com.freelink.core.network.auth.AuthApiResult.Success -> {
-                        val uploadId = init.value.uploadId
-                        mediaApiClient.completeUpload(
-                            accessToken = session.accessToken,
-                            uploadId = uploadId
-                        )
-                    }
-                }
-            }
-        ) {
-            is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value.toAttachment())
-            is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
-        }
+        return uploadSampleAttachment(chatId, AttachmentType.PHOTO)
     }
 
     suspend fun uploadSampleAttachment(
         chatId: String,
         attachmentType: AttachmentType
     ): DirectChatResult<MediaAttachment> {
-        return when (
-            val result = authRepository.authorizedRequest { session ->
-                val preset = sampleAttachmentPreset(chatId, attachmentType)
-                val init = mediaApiClient.initUpload(
-                    accessToken = session.accessToken,
-                    fileName = preset.fileName,
-                    mimeType = preset.mimeType,
-                    digestSha256 = preset.digestSha256,
-                    byteSize = preset.byteSize,
-                    attachmentType = preset.attachmentType
-                )
-                when (init) {
-                    is com.freelink.core.network.auth.AuthApiResult.Failure -> init
-                    is com.freelink.core.network.auth.AuthApiResult.Success -> {
-                        val uploadId = init.value.uploadId
-                        mediaApiClient.completeUpload(
+        return safely {
+            when (
+                val result = authRepository.authorizedRequest { session ->
+                    val preset = sampleAttachmentPreset(chatId, attachmentType)
+                    val init = mediaApiClient.initUpload(
+                        accessToken = session.accessToken,
+                        fileName = preset.fileName,
+                        mimeType = preset.mimeType,
+                        digestSha256 = preset.digestSha256,
+                        byteSize = preset.byteSize,
+                        attachmentType = preset.attachmentType
+                    )
+                    when (init) {
+                        is AuthApiResult.Failure -> init
+                        is AuthApiResult.Success -> mediaApiClient.completeUpload(
                             accessToken = session.accessToken,
-                            uploadId = uploadId
+                            uploadId = init.value.uploadId
                         )
                     }
                 }
+            ) {
+                is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value.toAttachment())
+                is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
             }
-        ) {
-            is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value.toAttachment())
-            is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
+        }
+    }
+
+    suspend fun setReaction(
+        chatId: String,
+        messageId: String,
+        emoji: String
+    ): DirectChatResult<Message> {
+        return safely {
+            when (
+                val result = authRepository.authorizedRequest { session ->
+                    messageApiClient.setReaction(
+                        accessToken = session.accessToken,
+                        chatId = chatId,
+                        messageId = messageId,
+                        emoji = emoji
+                    )
+                }
+            ) {
+                is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
+                is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
+            }
+        }
+    }
+
+    suspend fun observeRealtimeEvents(
+        chatId: String,
+        onEvent: suspend (DirectChatWsEvent) -> Unit
+    ) {
+        var reconnectAttempt = 0
+        while (true) {
+            val accessToken = authRepository.currentAccessToken() ?: return
+            try {
+                directChatWsEventsClient.collectEvents(
+                    accessToken = accessToken,
+                    chatId = chatId,
+                    onEvent = onEvent
+                )
+                reconnectAttempt = 0
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                reconnectAttempt += 1
+                val backoffMs = (reconnectAttempt * 1_000L).coerceAtMost(5_000L)
+                delay(backoffMs)
+            }
+        }
+    }
+
+    private suspend fun <T> safely(
+        block: suspend () -> DirectChatResult<T>
+    ): DirectChatResult<T> {
+        return try {
+            block()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            DirectChatResult.Failure("Could not complete chat action.")
         }
     }
 
@@ -178,48 +215,4 @@ class DirectChatRepository(
         val byteSize: Long,
         val attachmentType: AttachmentType
     )
-
-    suspend fun setReaction(
-        chatId: String,
-        messageId: String,
-        emoji: String
-    ): DirectChatResult<Message> {
-        return when (
-            val result = authRepository.authorizedRequest { session ->
-                messageApiClient.setReaction(
-                    accessToken = session.accessToken,
-                    chatId = chatId,
-                    messageId = messageId,
-                    emoji = emoji
-                )
-            }
-        ) {
-            is AuthRepositoryResult.Success -> DirectChatResult.Success(result.value)
-            is AuthRepositoryResult.Failure -> DirectChatResult.Failure(result.message)
-        }
-    }
-
-    suspend fun observeRealtimeEvents(
-        chatId: String,
-        onEvent: suspend (DirectChatWsEvent) -> Unit
-    ) {
-        var reconnectAttempt = 0
-        while (true) {
-            val accessToken = authRepository.currentAccessToken() ?: return
-            try {
-                directChatWsEventsClient.collectEvents(
-                    accessToken = accessToken,
-                    chatId = chatId,
-                    onEvent = onEvent
-                )
-                reconnectAttempt = 0
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                reconnectAttempt += 1
-                val backoffMs = (reconnectAttempt * 1_000L).coerceAtMost(5_000L)
-                delay(backoffMs)
-            }
-        }
-    }
 }

@@ -1,5 +1,7 @@
 package com.freelink.core.network.media
 
+import com.freelink.core.network.NetworkEndpoints
+
 import com.freelink.core.model.domain.AttachmentType
 import com.freelink.core.model.domain.MediaUploadSession
 import com.freelink.core.model.domain.UploadedMedia
@@ -24,7 +26,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorMediaApiClient(
-    private val baseUrl: String = "http://10.0.2.2:8080"
+    private val baseUrl: String = NetworkEndpoints.ApiBaseUrl
 ) : MediaApiClient {
     private val client: HttpClient = defaultClient()
     private val json = Json { ignoreUnknownKeys = true }

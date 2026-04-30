@@ -1,5 +1,7 @@
 package com.freelink.core.network.messages
 
+import com.freelink.core.network.NetworkEndpoints
+
 import com.freelink.core.model.domain.MediaAttachment
 import com.freelink.core.model.domain.Message
 import com.freelink.core.model.domain.MessageEnvelope
@@ -29,7 +31,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 class KtorMessageApiClient(
-    private val baseUrl: String = "http://10.0.2.2:8080"
+    private val baseUrl: String = NetworkEndpoints.ApiBaseUrl
 ) : MessageApiClient {
     private val client: HttpClient = defaultClient()
     private val json = Json {
