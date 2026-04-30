@@ -58,3 +58,14 @@ jobs:
       - name: Validate Android manifests
         run: |
           ./gradlew :android:app:processDebugManifest :android:app:processReleaseManifest
+
+      - name: Assemble debug APK
+        run: |
+          ./gradlew :android:app:assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: freelink-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
