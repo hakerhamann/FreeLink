@@ -51,6 +51,10 @@ jobs:
         run: |
           ./gradlew :android:feature:chat:testDebugUnitTest :android:feature:settings:testDebugUnitTest
 
+      - name: Validate Android performance scenarios
+        run: |
+          ./gradlew :android:benchmark:test :android:baselineprofile:test
+
       - name: Validate Android manifests
         run: |
           ./gradlew :android:app:processDebugManifest :android:app:processReleaseManifest

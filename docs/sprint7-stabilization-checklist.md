@@ -8,6 +8,7 @@ Use this checklist for each release-candidate PR before tagging the MVP.
 - `./gradlew :backend:libs:auth:test :backend:libs:chats:test :backend:libs:messaging:test :backend:libs:media:test :backend:libs:privacy:test :backend:libs:observability:test`
 - `./gradlew :android:app:compileDebugKotlin`
 - `./gradlew :android:feature:chat:testDebugUnitTest :android:feature:settings:testDebugUnitTest`
+- `./gradlew :android:benchmark:test :android:baselineprofile:test`
 - `./gradlew :android:app:processDebugManifest :android:app:processReleaseManifest`
 
 These gates are mirrored in GitHub Actions CI for release-candidate PRs.
@@ -24,6 +25,7 @@ These gates are mirrored in GitHub Actions CI for release-candidate PRs.
 - Archive and restore keep main chat list and archive screen consistent.
 - Device revoke removes only the selected session.
 - Media dedup returns existing blob metadata without reuploading.
+- Performance scenario catalog covers startup, chat list, open chat, media and voice.
 
 ## Release Review Questions
 
